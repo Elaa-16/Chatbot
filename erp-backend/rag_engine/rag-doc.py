@@ -1,189 +1,30 @@
 """
 RAG Document Generator for Construction ERP
-Generates all documents from real DB data + static policies/procedures
+Generates static policy/procedure/glossaire/email documents only.
+Live data (projects, employees, KPIs, etc.) is handled by the LLM planner via API endpoints.
 Run once: python generate_rag_documents.py
 """
 
-import sqlite3
 import os
-import json
-
-DB_PATH = "erp_database.db"
-OUTPUT_DIR = "rag_documents"
 
 # ── Create folder structure ──────────────────────────────────────────────────
 folders = [
-    "rag_documents/projects",
     "rag_documents/policies",
     "rag_documents/procedures",
-    "rag_documents/employees",
-    "rag_documents/kpis",
-    "rag_documents/equipment",
-    "rag_documents/suppliers",
     "rag_documents/glossaire",
     "rag_documents/emails",
 ]
 for folder in folders:
     os.makedirs(folder, exist_ok=True)
 
-# ── Connect DB ───────────────────────────────────────────────────────────────
-conn = sqlite3.connect(DB_PATH)
-conn.row_factory = sqlite3.Row
-c = conn.cursor()
-
-c.execute("SELECT * FROM projects")
-projects = [dict(r) for r in c.fetchall()]
-
-c.execute("SELECT * FROM employees")
-employees = [dict(r) for r in c.fetchall()]
-emp_map = {e["employee_id"]: f"{e['first_name']} {e['last_name']}" for e in employees}
-
-c.execute("SELECT * FROM tasks")
-tasks = [dict(r) for r in c.fetchall()]
-
-c.execute("""SELECT k.*, p.location, p.project_type, p.client_name,
-                    p.start_date, p.end_date, p.budget_eur, p.actual_cost_eur,
-                    p.completion_percentage, p.status as project_status,
-                    p.project_manager_id, p.description
-             FROM kpis k JOIN projects p ON k.project_id = p.project_id
-             WHERE k.kpi_date = (
-                 SELECT MAX(k2.kpi_date) FROM kpis k2 WHERE k2.project_id = k.project_id
-             )""")
-kpis = [dict(r) for r in c.fetchall()]
-kpi_map = {k["project_id"]: k for k in kpis}
-
-c.execute("SELECT * FROM leave_requests")
-leaves = [dict(r) for r in c.fetchall()]
-
-c.execute("SELECT * FROM equipment")
-equipment = [dict(r) for r in c.fetchall()]
-
-c.execute("SELECT * FROM suppliers")
-suppliers = [dict(r) for r in c.fetchall()]
-
-conn.close()
-
 def write(path, content):
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     print(f"✅ {path} ({len(content):,} chars)")
 
-# ════════════════════════════════════════════════════════════════════════════
-# 1. PROJECT REPORTS (one per project)
-# ════════════════════════════════════════════════════════════════════════════
-for p in projects:
-    pid = p["project_id"]
-    kpi = kpi_map.get(pid, {})
-    manager = emp_map.get(p.get("project_manager_id", ""), "Non assigné")
-    supervisor = emp_map.get(p.get("site_supervisor_id", ""), "Non assigné")
-    project_tasks = [t for t in tasks if t["project_id"] == pid]
-
-    # Budget analysis
-    budget = p["budget_eur"] or 0
-    actual = p["actual_cost_eur"] or 0
-    remaining = budget - actual
-    budget_pct = (actual / budget * 100) if budget else 0
-    over_under = "dépassement" if actual > budget else "économie"
-    variance_pct = kpi.get("budget_variance_percentage", 0) or 0
-    schedule_days = kpi.get("schedule_variance_days", 0) or 0
-    schedule_status = "en retard" if schedule_days > 0 else ("en avance" if schedule_days < 0 else "dans les délais")
-
-    content = f"""RAPPORT DE PROJET — {p['project_name']} ({pid})
-{'='*60}
-Date du rapport: 2026-02-21
-Généré par: Système ERP Construction Tunisie
-
-INFORMATIONS GÉNÉRALES
-----------------------
-Nom du projet: {p['project_name']}
-Identifiant: {pid}
-Type: {p.get('project_type', 'N/A')}
-Client: {p.get('client_name', 'N/A')}
-Localisation: {p.get('location', 'N/A')}
-Statut actuel: {p['status']}
-Date de début: {p.get('start_date', 'N/A')}
-Date de fin prévue: {p.get('end_date', 'N/A')}
-Description: {p.get('description', 'N/A')}
-
-ÉQUIPE DU PROJET
-----------------
-Chef de projet: {manager}
-Superviseur de chantier: {supervisor}
-
-AVANCEMENT
-----------
-Taux de complétion: {p['completion_percentage']}%
-Statut calendrier: Le projet est {schedule_status} de {abs(schedule_days)} jours.
-{"Le projet accuse un retard de " + str(schedule_days) + " jours sur le planning initial." if schedule_days > 0 else ""}
-{"Le projet est en avance de " + str(abs(schedule_days)) + " jours sur le planning." if schedule_days < 0 else ""}
-{"Le projet respecte parfaitement le calendrier prévu." if schedule_days == 0 else ""}
-
-BUDGET ET COÛTS
----------------
-Budget alloué: {budget:,.0f} EUR
-Coût réel engagé: {actual:,.0f} EUR
-Coût restant estimé: {remaining:,.0f} EUR
-Pourcentage consommé: {budget_pct:.1f}%
-Variance budgétaire: {variance_pct:+.1f}% ({over_under})
-{"ATTENTION: Le projet dépasse son budget de " + str(abs(variance_pct)) + "%" if variance_pct > 0 else ""}
-{"Le projet réalise une économie de " + str(abs(variance_pct)) + "% sur le budget" if variance_pct < 0 else ""}
-
-INDICATEURS DE PERFORMANCE (KPIs)
-----------------------------------
-Score de qualité: {kpi.get('quality_score', 'N/A')}/100
-Incidents de sécurité: {kpi.get('safety_incidents', 'N/A')}
-Satisfaction client: {kpi.get('client_satisfaction_score', 'N/A')}/5
-Productivité de l'équipe: {kpi.get('team_productivity_percentage', 'N/A')}%
-Indice de performance des coûts (CPI): {kpi.get('cost_performance_index', 'N/A')}
-Indice de performance du calendrier (SPI): {kpi.get('schedule_performance_index', 'N/A')}
-Niveau de risque: {kpi.get('risk_level', 'N/A')}
-
-INTERPRÉTATION DES KPIs
-------------------------
-CPI (Cost Performance Index):
-  - CPI > 1.0: Le projet est sous budget (bonne performance financière)
-  - CPI < 1.0: Le projet dépasse le budget (attention requise)
-  - CPI actuel {kpi.get('cost_performance_index', 1.0)}: {"bon" if (kpi.get('cost_performance_index') or 1) >= 1.0 else "attention requise"}
-
-SPI (Schedule Performance Index):
-  - SPI > 1.0: Le projet est en avance sur le calendrier
-  - SPI < 1.0: Le projet est en retard sur le calendrier
-  - SPI actuel {kpi.get('schedule_performance_index', 1.0)}: {"bon" if (kpi.get('schedule_performance_index') or 1) >= 1.0 else "retard détecté"}
-
-TÂCHES DU PROJET
-----------------
-Nombre total de tâches: {len(project_tasks)}
-"""
-    for t in project_tasks:
-        assignee = emp_map.get(t.get("assigned_to", ""), "Non assigné")
-        content += f"""
-  Tâche {t['task_id']}: {t['title']}
-    - Priorité: {t['priority']}
-    - Statut: {t['status']}
-    - Assignée à: {assignee}
-    - Échéance: {t.get('due_date', 'N/A')}
-    - Heures estimées: {t.get('estimated_hours', 'N/A')}h
-    - Heures réelles: {t.get('actual_hours', 'N/A')}h
-    - Description: {t.get('description', 'N/A')}
-"""
-
-    content += f"""
-RECOMMANDATIONS
----------------
-{"⚠️  Ce projet présente un retard de " + str(schedule_days) + " jours. Il est recommandé d'augmenter les ressources ou de réviser le planning." if schedule_days > 5 else ""}
-{"⚠️  Ce projet dépasse son budget. Une révision des dépenses s'impose." if variance_pct > 3 else ""}
-{"✅  Ce projet performe bien sur les indicateurs budgétaires et calendaires." if schedule_days <= 0 and variance_pct <= 0 else ""}
-{"🔴  Niveau de risque élevé détecté. Une réunion de crise est recommandée." if kpi.get('risk_level') == 'High' else ""}
-{"🟡  Niveau de risque modéré. Surveillance accrue recommandée." if kpi.get('risk_level') == 'Medium' else ""}
-{"🟢  Niveau de risque faible. Le projet se déroule normalement." if kpi.get('risk_level') == 'Low' else ""}
-
-FIN DU RAPPORT — {p['project_name']} ({pid})
-"""
-    write(f"rag_documents/projects/rapport_{pid}.txt", content)
-
 
 # ════════════════════════════════════════════════════════════════════════════
-# 2. POLICIES
+# 1. POLICIES
 # ════════════════════════════════════════════════════════════════════════════
 
 write("rag_documents/policies/politique_conges.txt", """
@@ -282,7 +123,7 @@ Tout personnel travaillant sur un chantier doit obligatoirement porter:
 - Protège-oreilles lors des travaux bruyants (> 85 dB)
 - Masque anti-poussière (FFP2 minimum) lors des travaux poussiéreux
 
-Le non-port d'EPI est passible d'une avertissement au premier manquement
+Le non-port d'EPI est passible d'un avertissement au premier manquement
 et d'une sanction disciplinaire en cas de récidive.
 
 2. PROCÉDURE EN CAS D'ACCIDENT SUR CHANTIER
@@ -455,31 +296,7 @@ Version: 1.8 | Date: Janvier 2026
     Étape 6: Réception et contrôle qualité
     Étape 7: Validation de la facture et paiement
 
-2. FOURNISSEURS RÉFÉRENCÉS (ACTIFS)
--------------------------------------
-Liste des fournisseurs approuvés dans le système ERP:
-
-S001 — Ciments de Tunisie (Matériaux) | Tunis | Note: 5/5
-    Contact: Ahmed Kacem | contact@ciments.tn | +216 71 234 567
-    Spécialité: Fournisseur principal de ciment et béton
-    
-S002 — Matériaux Pro (Matériaux) | Sfax | Note: 4/5
-    Contact: Fatma Ben Ali | f.benali@matpro.tn | +216 71 345 678
-    Spécialité: Matériaux de construction généraux
-    
-S003 — Équipement TP (Équipement) | Tunis | Note: 5/5
-    Contact: Karim Jebali | k.jebali@equiptp.tn | +216 71 456 789
-    Spécialité: Location et vente d'engins de chantier
-    
-S004 — Électricité Moderne (Services) | Tunis | Note: 4/5
-    Contact: Leila Mansour | contact@elecmod.tn | +216 71 567 890
-    Spécialité: Installation électrique industrielle et tertiaire
-    
-S005 — Plomberie Services (Services) | Sousse | Note: 3/5
-    Contact: Mohamed Trabelsi | m.trabelsi@plomberie.tn | +216 74 678 901
-    Spécialité: Travaux de plomberie et sanitaire
-
-3. RÉFÉRENCEMENT D'UN NOUVEAU FOURNISSEUR
+2. RÉFÉRENCEMENT D'UN NOUVEAU FOURNISSEUR
 -------------------------------------------
 Pour ajouter un fournisseur dans le système:
     1. Remplir le formulaire de référencement (disponible sur ERP)
@@ -487,14 +304,14 @@ Pour ajouter un fournisseur dans le système:
     3. Validation par le service Achats dans les 5 jours ouvrables
     4. Visite de qualification pour les fournisseurs > 100,000 EUR/an
 
-4. DÉLAIS DE PAIEMENT
+3. DÉLAIS DE PAIEMENT
 ----------------------
 - Fournisseurs locaux: 30 jours fin de mois
 - Fournisseurs internationaux: 45 jours
 - Pénalités de retard de paiement: 8% annuel
 - Escompte pour paiement comptant: négocié au cas par cas
 
-5. GESTION DES LITIGES FOURNISSEURS
+4. GESTION DES LITIGES FOURNISSEURS
 -------------------------------------
 - Tout litige est signalé dans le système ERP (module Issues, catégorie "Autre")
 - Le service Achats a 5 jours pour répondre
@@ -506,75 +323,8 @@ Service Achats: achats@construction-tn.com
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# 3. PROCEDURES
+# 2. PROCEDURES
 # ════════════════════════════════════════════════════════════════════════════
-
-write("rag_documents/procedures/gestion_equipements.txt", f"""
-PROCÉDURE DE GESTION DES ÉQUIPEMENTS ET ENGINS
-Construction Tunisie ERP — Document Technique
-================================================
-Version: 2.0 | Date: Janvier 2026
-
-1. INVENTAIRE DES ÉQUIPEMENTS ACTUELS
----------------------------------------
-Le parc d'équipements de la société comprend les éléments suivants:
-
-{chr(10).join([
-    f"  {eq['equipment_id']} — {eq['name']}"
-    f"\n    Catégorie: {eq['category']}"
-    f"\n    Numéro de série: {eq['serial_number']}"
-    f"\n    Statut actuel: {eq['status']}"
-    f"\n    Localisation: {eq['location']}"
-    f"\n    Valeur d'achat: {eq['purchase_value']:,.0f} EUR"
-    f"\n    Dernière maintenance: {eq['last_maintenance']}"
-    f"\n    Prochaine maintenance: {eq['next_maintenance']}"
-    f"\n    Affectation: {'Projet ' + str(eq['current_project_id']) if eq['current_project_id'] else 'Non affecté'}"
-    f"\n    Notes: {eq.get('notes', 'Aucune')}\n"
-    for eq in equipment
-])}
-
-2. STATUTS DES ÉQUIPEMENTS
-----------------------------
-- "Available" (Disponible): L'équipement est prêt et peut être affecté à un projet
-- "In Use" (En cours d'utilisation): L'équipement est affecté à un chantier actif
-- "Maintenance" (En maintenance): L'équipement est en révision ou réparation
-
-3. PROCÉDURE D'AFFECTATION
-----------------------------
-Étape 1: Chef de projet fait une demande dans l'ERP (module Équipements)
-Étape 2: Vérification de la disponibilité en temps réel dans le système
-Étape 3: Approbation du Responsable du parc matériel
-Étape 4: Affectation enregistrée dans l'ERP avec date de début
-Étape 5: Inspection de l'équipement par le chef de chantier avant utilisation
-Étape 6: Rapport d'utilisation quotidien obligatoire pour engins > 100,000 EUR
-
-4. PLAN DE MAINTENANCE PRÉVENTIVE
-------------------------------------
-- Maintenance légère: tous les 3 mois (vérification niveaux, graissage)
-- Maintenance complète: tous les 6 mois (révision générale)
-- Contrôle technique: annuel (conformité réglementaire)
-- Tout équipement dont la prochaine maintenance est dépassée est automatiquement
-  mis en statut "Maintenance" dans le système ERP
-
-5. PROCÉDURE EN CAS DE PANNE
-------------------------------
-Étape 1: Le conducteur signale la panne immédiatement au chef de chantier
-Étape 2: Créer un incident dans le système ERP (catégorie "Technical")
-Étape 3: L'équipement est mis en statut "Maintenance" dans l'ERP
-Étape 4: Contacter le fournisseur S003 (Équipement TP) pour les engins lourds
-Étape 5: Estimer le délai de réparation et informer le chef de projet
-Étape 6: Si délai > 3 jours, chercher un équipement de remplacement disponible
-
-6. RÈGLES D'UTILISATION
-------------------------
-- Seuls les opérateurs certifiés peuvent conduire les engins lourds
-- Interdiction formelle d'utiliser les équipements de l'entreprise à des fins personnelles
-- Toute dégradation causée par négligence peut être imputée à l'employé responsable
-- Le carnet de bord de chaque engin doit être rempli quotidiennement
-
-DOCUMENT TECHNIQUE — Construction Tunisie
-Responsable Parc Matériel: materiels@construction-tn.com
-""")
 
 write("rag_documents/procedures/gestion_incidents.txt", """
 PROCÉDURE DE GESTION DES INCIDENTS ET PROBLÈMES
@@ -713,112 +463,58 @@ DOCUMENT RH — Construction Tunisie
 DRH: rh@construction-tn.com
 """)
 
+write("rag_documents/procedures/gestion_equipements.txt", """
+PROCÉDURE DE GESTION DES ÉQUIPEMENTS ET ENGINS
+Construction Tunisie ERP — Document Technique
+================================================
+Version: 2.0 | Date: Janvier 2026
 
-# ════════════════════════════════════════════════════════════════════════════
-# 4. EMPLOYEE GUIDE
-# ════════════════════════════════════════════════════════════════════════════
+1. STATUTS DES ÉQUIPEMENTS
+----------------------------
+- "Available" (Disponible): L'équipement est prêt et peut être affecté à un projet
+- "In Use" (En cours d'utilisation): L'équipement est affecté à un chantier actif
+- "Maintenance" (En maintenance): L'équipement est en révision ou réparation
 
-dept_groups = {}
-for e in employees:
-    dept = e.get("department", "Autre")
-    dept_groups.setdefault(dept, []).append(e)
+2. PROCÉDURE D'AFFECTATION
+----------------------------
+Étape 1: Chef de projet fait une demande dans l'ERP (module Équipements)
+Étape 2: Vérification de la disponibilité en temps réel dans le système
+Étape 3: Approbation du Responsable du parc matériel
+Étape 4: Affectation enregistrée dans l'ERP avec date de début
+Étape 5: Inspection de l'équipement par le chef de chantier avant utilisation
+Étape 6: Rapport d'utilisation quotidien obligatoire pour engins > 100,000 EUR
 
-emp_content = """GUIDE DE L'ÉQUIPE — Construction Tunisie
-==========================================
-Document RH | Mise à jour: Février 2026
+3. PLAN DE MAINTENANCE PRÉVENTIVE
+------------------------------------
+- Maintenance légère: tous les 3 mois (vérification niveaux, graissage)
+- Maintenance complète: tous les 6 mois (révision générale)
+- Contrôle technique: annuel (conformité réglementaire)
+- Tout équipement dont la prochaine maintenance est dépassée est automatiquement
+  mis en statut "Maintenance" dans le système ERP
 
-Ce document présente l'ensemble des employés de la société, leur rôle,
-leur département, et leurs responsabilités.
+4. PROCÉDURE EN CAS DE PANNE
+------------------------------
+Étape 1: Le conducteur signale la panne immédiatement au chef de chantier
+Étape 2: Créer un incident dans le système ERP (catégorie "Technical")
+Étape 3: L'équipement est mis en statut "Maintenance" dans l'ERP
+Étape 4: Contacter le fournisseur S003 (Équipement TP) pour les engins lourds
+Étape 5: Estimer le délai de réparation et informer le chef de projet
+Étape 6: Si délai > 3 jours, chercher un équipement de remplacement disponible
 
-ORGANIGRAMME ET ÉQUIPES
+5. RÈGLES D'UTILISATION
 ------------------------
-"""
-for dept, emps in dept_groups.items():
-    emp_content += f"\nDÉPARTEMENT: {dept}\n" + "-"*40 + "\n"
-    for e in emps:
-        manager_name = emp_map.get(e.get("manager_id", ""), "Direction")
-        emp_content += f"""
-  {e['first_name']} {e['last_name']} ({e['employee_id']})
-    Poste: {e['position']}
-    Rôle système: {e['role']}
-    Email: {e['email']}
-    Téléphone: {e['phone']}
-    Spécialisation: {e.get('specialization', 'N/A')}
-    Certifications: {e.get('certifications', 'N/A')}
-    Expérience: {e.get('years_experience', 'N/A')} ans
-    Manager: {manager_name}
-    Congés annuels: {e.get('annual_leave_total', 35)} jours (pris: {e.get('annual_leave_taken', 0)})
-"""
+- Seuls les opérateurs certifiés peuvent conduire les engins lourds
+- Interdiction formelle d'utiliser les équipements de l'entreprise à des fins personnelles
+- Toute dégradation causée par négligence peut être imputée à l'employé responsable
+- Le carnet de bord de chaque engin doit être rempli quotidiennement
 
-write("rag_documents/employees/guide_equipe.txt", emp_content)
+DOCUMENT TECHNIQUE — Construction Tunisie
+Responsable Parc Matériel: materiels@construction-tn.com
+""")
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# 5. KPI ANALYSIS REPORT
-# ════════════════════════════════════════════════════════════════════════════
-
-delayed = [k for k in kpis if (k.get("schedule_variance_days") or 0) > 0]
-on_time = [k for k in kpis if (k.get("schedule_variance_days") or 0) <= 0]
-over_budget = [k for k in kpis if (k.get("budget_variance_percentage") or 0) > 0]
-high_risk = [k for k in kpis if k.get("risk_level") == "High"]
-total_incidents = sum(k.get("safety_incidents") or 0 for k in kpis)
-avg_quality = sum(k.get("quality_score") or 0 for k in kpis) / len(kpis) if kpis else 0
-avg_satisfaction = sum(k.get("client_satisfaction_score") or 0 for k in kpis) / len(kpis) if kpis else 0
-
-kpi_content = f"""RAPPORT D'ANALYSE GLOBALE DES KPIs
-Construction Tunisie ERP
-====================================
-Période: Janvier 2026 | Généré le: 2026-02-21
-
-RÉSUMÉ EXÉCUTIF
----------------
-Nombre total de projets suivis: {len(kpis)}
-Projets en retard (schedule_variance_days > 0): {len(delayed)}
-Projets dans les délais ou en avance: {len(on_time)}
-Projets avec dépassement budgétaire: {len(over_budget)}
-Projets à risque élevé: {len(high_risk)}
-Total incidents sécurité: {total_incidents}
-Score qualité moyen: {avg_quality:.1f}/100
-Satisfaction client moyenne: {avg_satisfaction:.1f}/5
-
-PROJETS EN RETARD (schedule_variance_days > 0)
-------------------------------------------------
-"""
-for k in sorted(delayed, key=lambda x: x.get("schedule_variance_days", 0) or 0, reverse=True):
-    kpi_content += f"""
-  {k['project_name']} ({k['project_id']})
-    Retard: {k['schedule_variance_days']} jours
-    Avancement: {k['completion_percentage']}%
-    Variance budgétaire: {k.get('budget_variance_percentage', 0):+.1f}%
-    Risque: {k.get('risk_level', 'N/A')}
-    CPI: {k.get('cost_performance_index', 'N/A')} | SPI: {k.get('schedule_performance_index', 'N/A')}
-    Incidents sécurité: {k.get('safety_incidents', 0)}
-"""
-
-kpi_content += "\nPROJETS À RISQUE ÉLEVÉ\n-----------------------\n"
-for k in high_risk:
-    kpi_content += f"""
-  {k['project_name']} ({k['project_id']})
-    Risque: {k.get('risk_level')} | Retard: {k.get('schedule_variance_days', 0)} jours
-    Incidents: {k.get('safety_incidents', 0)} | Qualité: {k.get('quality_score', 'N/A')}/100
-"""
-
-kpi_content += "\nPROJETS AVEC DÉPASSEMENT BUDGÉTAIRE\n--------------------------------------\n"
-for k in sorted(over_budget, key=lambda x: x.get("budget_variance_percentage", 0) or 0, reverse=True):
-    kpi_content += f"""
-  {k['project_name']} ({k['project_id']}): +{k.get('budget_variance_percentage', 0):.1f}%
-"""
-
-kpi_content += "\nTOP PROJETS PAR PERFORMANCE (meilleur CPI)\n-------------------------------------------\n"
-sorted_cpi = sorted(kpis, key=lambda x: x.get("cost_performance_index") or 0, reverse=True)
-for k in sorted_cpi[:5]:
-    kpi_content += f"  {k['project_name']}: CPI={k.get('cost_performance_index', 'N/A')} | SPI={k.get('schedule_performance_index', 'N/A')}\n"
-
-write("rag_documents/kpis/analyse_kpis_janvier2026.txt", kpi_content)
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# 6. EMAILS / MEMOS
+# 3. EMAILS / MEMOS
 # ════════════════════════════════════════════════════════════════════════════
 
 write("rag_documents/emails/memo_reunion_fevrier2026.txt", """
@@ -950,7 +646,7 @@ construction-tn.com | +216 23 345 678
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# 7. GLOSSAIRE MÉTIER (THE KEY RAG DOCUMENT)
+# 4. GLOSSAIRE MÉTIER
 # ════════════════════════════════════════════════════════════════════════════
 
 write("rag_documents/glossaire/glossaire_metier_btp.txt", """
@@ -991,7 +687,6 @@ Béton armé
 
 Béton prêt à l'emploi (BPE)
   Béton fabriqué en centrale et livré sur chantier par camion toupie.
-  Fourni par des centrales à béton, souvent via le fournisseur Ciments de Tunisie.
 
 Budget alloué (budget_eur dans l'ERP)
   Montant total prévu pour réaliser un projet, en euros.
@@ -1001,7 +696,6 @@ Budget variance (budget_variance_percentage dans l'ERP)
   Écart entre le budget prévu et le coût réel, exprimé en pourcentage.
   Positif (+) = dépassement de budget (mauvais)
   Négatif (-) = économie par rapport au budget (bon)
-  Exemple: budget_variance = +4.2% signifie que le projet dépasse son budget de 4.2%
 
 ═══════════════════════════════════════════════════════════
 C
@@ -1020,25 +714,22 @@ Chef de projet (Project Manager)
   Dans l'ERP: champ project_manager_id.
 
 CPI — Cost Performance Index (Indice de Performance des Coûts)
-  Indicateur clé mesurant l'efficacité financière d'un projet.
   CPI = Valeur acquise / Coût réel
-  CPI > 1.0: le projet est sous budget — bonne performance financière
-  CPI < 1.0: le projet dépasse le budget — attention requise
+  CPI > 1.0: le projet est sous budget
+  CPI < 1.0: le projet dépasse le budget
   CPI = 1.0: le projet est exactement dans le budget
-  Dans l'ERP: champ cost_performance_index dans la table kpis.
 
 CNSS
   Caisse Nationale de Sécurité Sociale. Organisme tunisien gérant
   les cotisations sociales, les accidents du travail et les maladies professionnelles.
 
 Coffrage
-  Moule temporaire (bois, métal, plastique) dans lequel on coule le béton.
-  Retiré après durcissement du béton (décoffrage).
+  Moule temporaire dans lequel on coule le béton. Retiré après durcissement.
 
 Congé annuel (annual_leave dans l'ERP)
-  Dans l'ERP: annual_leave_total = jours accordés (35 jours standard)
-              annual_leave_taken = jours déjà pris
-              Solde restant = annual_leave_total - annual_leave_taken
+  annual_leave_total = jours accordés (35 jours standard)
+  annual_leave_taken = jours déjà pris
+  Solde restant = annual_leave_total - annual_leave_taken
 
 ═══════════════════════════════════════════════════════════
 D
@@ -1057,7 +748,6 @@ E
 ═══════════════════════════════════════════════════════════
 
 EPI — Équipements de Protection Individuelle
-  Ensemble des équipements portés par les travailleurs pour se protéger:
   casque, chaussures de sécurité, gilet, gants, lunettes, harnais.
   Port obligatoire sur tous les chantiers de Construction Tunisie.
 
@@ -1065,66 +755,48 @@ ERP — Enterprise Resource Planning (Progiciel de Gestion Intégré)
   Système informatique centralisant toutes les données de l'entreprise:
   projets, employés, finances, équipements, fournisseurs, congés, KPIs.
 
-Études d'exécution
-  Plans et documents techniques détaillés permettant la réalisation des travaux.
-  Réalisés par le bureau d'études avant et pendant la construction.
-
 ═══════════════════════════════════════════════════════════
 F
 ═══════════════════════════════════════════════════════════
 
 Ferraillage
   Mise en place des armatures en acier avant coulage du béton.
-  Opération réalisée par des ferraileurs qualifiés.
 
 Fondations
   Partie de la structure transmettant les charges du bâtiment au sol.
   Types: superficielles (semelles, radiers) ou profondes (pieux, micropieux).
 
 Fournisseur référencé
-  Entreprise approuvée et enregistrée dans le système ERP pour la fourniture
-  de matériaux, équipements ou services. Voir liste dans module Fournisseurs.
+  Entreprise approuvée et enregistrée dans le système ERP.
 
 ═══════════════════════════════════════════════════════════
 G
 ═══════════════════════════════════════════════════════════
 
 Gestion des risques (risk_level dans l'ERP)
-  Évaluation du niveau de risque d'un projet.
-  Low: risque faible, projet dans les normes
-  Medium: risque modéré, surveillance renforcée
-  High: risque élevé, intervention du management requise
-
-Grue
-  Engin de levage utilisé sur les chantiers pour déplacer des charges lourdes.
-  La Grue Mobile 50T (EQ001) est l'engin principal de la société.
+  Low: risque faible | Medium: risque modéré | High: risque élevé
 
 ═══════════════════════════════════════════════════════════
 H
 ═══════════════════════════════════════════════════════════
 
 HSE — Hygiène, Sécurité, Environnement
-  Département responsable de la sécurité sur les chantiers et du respect
-  des réglementations environnementales. Clé pour les KPIs safety_incidents.
+  Département responsable de la sécurité sur les chantiers.
 
 ═══════════════════════════════════════════════════════════
 I
 ═══════════════════════════════════════════════════════════
 
 Incident (Issues dans l'ERP)
-  Tout événement non planifié affectant un projet. Enregistré dans le module Issues.
+  Tout événement non planifié affectant un projet.
   Catégories: Safety, Quality, Delay, Budget, Technical, Other.
   Sévérités: Low, Medium, High, Critical.
-
-IRM (Imagerie par Résonance Magnétique)
-  Équipement médical. Référencé dans la tâche T002 du projet Hôpital Régional Sfax (P003).
 
 ═══════════════════════════════════════════════════════════
 K
 ═══════════════════════════════════════════════════════════
 
 KPI — Key Performance Indicator (Indicateur Clé de Performance)
-  Mesure quantifiable évaluant la performance d'un projet.
   KPIs suivis dans l'ERP:
   - budget_variance_percentage: écart budgétaire en %
   - schedule_variance_days: retard en jours (positif = retard, négatif = avance)
@@ -1142,130 +814,60 @@ M
 
 Maître d'œuvre (MOE)
   Entité technique responsable de la conception et du suivi des travaux.
-  Construction Tunisie agit en tant que maître d'œuvre sur ses projets.
 
 Maître d'ouvrage (MOA)
-  Client qui commande et finance les travaux. Propriétaire final de l'ouvrage.
-  Dans l'ERP: champ client_name dans la table projects.
+  Client qui commande et finance les travaux. Dans l'ERP: champ client_name.
 
 Marché de travaux
-  Contrat signé entre le client (MOA) et l'entreprise (MOE) pour la réalisation
-  de travaux de construction. Définit le périmètre, le prix et le délai.
-
-Masse salariale
-  Total des salaires et charges sociales versés aux employés sur une période.
-
-═══════════════════════════════════════════════════════════
-O
-═══════════════════════════════════════════════════════════
-
-Ouvrage
-  Résultat final de la construction (bâtiment, pont, route, etc.).
+  Contrat signé entre le client et l'entreprise. Définit périmètre, prix et délai.
 
 ═══════════════════════════════════════════════════════════
 P
 ═══════════════════════════════════════════════════════════
 
-Plancher
-  Dalle horizontale séparant deux niveaux d'un bâtiment.
-
 Planning de chantier
   Document définissant le séquencement et les dates des travaux.
-  Le retard par rapport au planning est mesuré par schedule_variance_days dans l'ERP.
-
-Prise en masse
-  Durcissement du béton après coulage. Durée minimale: 28 jours pour résistance totale.
+  Le retard est mesuré par schedule_variance_days dans l'ERP.
 
 Projet (projects dans l'ERP)
-  Opération de construction gérée dans le système ERP.
-  Attributs clés: project_id, project_name, status, budget_eur, actual_cost_eur,
-  completion_percentage, location, start_date, end_date.
-  Statuts possibles: "In Progress" (en cours), "Completed" (terminé), "Planning" (en planification).
-
-═══════════════════════════════════════════════════════════
-Q
-═══════════════════════════════════════════════════════════
-
-Qualité (quality_score dans l'ERP)
-  Score sur 100 évaluant la qualité de réalisation d'un projet.
-  Basé sur: conformité aux plans, matériaux utilisés, finitions, contrôles.
-  Score > 90: excellente qualité | 80-90: bonne qualité | < 80: qualité insuffisante
+  Statuts possibles: "In Progress", "Completed", "Planning".
 
 ═══════════════════════════════════════════════════════════
 R
 ═══════════════════════════════════════════════════════════
 
 RAG — Retrieval-Augmented Generation
-  Technique d'intelligence artificielle utilisée par le chatbot ERP.
-  Permet au chatbot de répondre en se basant sur des documents réels et des données live.
+  Technique d'IA utilisée par le chatbot ERP pour répondre à partir de documents.
 
 Retard (schedule_variance_days dans l'ERP)
-  Nombre de jours de retard d'un projet par rapport au planning.
-  schedule_variance_days > 0: le projet est EN RETARD
-  schedule_variance_days < 0: le projet est EN AVANCE
-  schedule_variance_days = 0: le projet est DANS LES DÉLAIS
-
-Réception des travaux
-  Acte officiel par lequel le client accepte les travaux réalisés.
-  Peut être avec ou sans réserves. Déclenche le démarrage des garanties.
+  > 0: le projet est EN RETARD
+  < 0: le projet est EN AVANCE
+  = 0: le projet est DANS LES DÉLAIS
 
 ═══════════════════════════════════════════════════════════
 S
 ═══════════════════════════════════════════════════════════
 
-Satisfaction client (client_satisfaction_score dans l'ERP)
-  Note attribuée par le client sur 5 étoiles.
-  5/5: client très satisfait | 3/5: satisfaction modérée | < 3/5: client insatisfait
-
-Schedule Variance (SV)
-  Écart entre le travail planifié et le travail réellement effectué.
-  Mesure le retard ou l'avance en termes de valeur.
-
 SPI — Schedule Performance Index (Indice de Performance du Calendrier)
-  Indicateur mesurant l'efficacité par rapport au planning.
   SPI = Valeur acquise / Valeur planifiée
-  SPI > 1.0: le projet est EN AVANCE sur le planning
-  SPI < 1.0: le projet est EN RETARD sur le planning
-  SPI = 1.0: le projet respecte exactement le planning
+  SPI > 1.0: EN AVANCE | SPI < 1.0: EN RETARD | SPI = 1.0: DANS LES DÉLAIS
 
 Sous-traitant
-  Entreprise mandatée par Construction Tunisie pour réaliser une partie spécifique
-  des travaux (électricité, plomberie, menuiserie, etc.).
-  Exemples: Électricité Moderne (S004), Plomberie Services (S005).
+  Entreprise mandatée pour réaliser une partie spécifique des travaux.
 
 ═══════════════════════════════════════════════════════════
 T
 ═══════════════════════════════════════════════════════════
 
 Tâche (tasks dans l'ERP)
-  Unité de travail assignée à un employé dans le cadre d'un projet.
-  Statuts: "Todo" (à faire), "In Progress" (en cours), "Done" (terminée).
-  Priorités: "Critical" (critique), "High" (haute), "Medium" (moyenne).
+  Statuts: "Todo", "In Progress", "Done".
+  Priorités: "Critical", "High", "Medium", "Low".
 
 Timesheet (feuille de temps)
-  Enregistrement des heures travaillées par un employé sur un projet.
-  Saisi quotidiennement dans le module Timesheets de l'ERP.
+  Enregistrement des heures travaillées. Saisi dans le module Timesheets de l'ERP.
 
-Travaux modificatifs acquéreur (TMA)
-  Modifications demandées par le client en cours de chantier.
-  Font l'objet d'un avenant et peuvent impacter budget et délai.
-
-Taux de fréquence (TF)
-  Indicateur HSE = Nombre d'accidents × 1,000,000 / Heures travaillées
-
-Taux de gravité (TG)
-  Indicateur HSE = Jours perdus × 1,000 / Heures travaillées
-
-═══════════════════════════════════════════════════════════
-V
-═══════════════════════════════════════════════════════════
-
-Valeur acquise (Earned Value)
-  Valeur du travail réellement effectué à un instant T.
-  Concept central de la gestion de projet moderne (méthode EVM).
-
-Variance budgétaire
-  Voir budget_variance_percentage. Écart entre budget prévu et coût réel.
+Taux de fréquence (TF) = Accidents × 1,000,000 / Heures travaillées
+Taux de gravité (TG) = Jours perdus × 1,000 / Heures travaillées
 
 ═══════════════════════════════════════════════════════════
 ABRÉVIATIONS COURANTES
@@ -1282,10 +884,8 @@ HSE: Hygiène Sécurité Environnement
 KPI: Key Performance Indicator
 MOA: Maître d'Ouvrage
 MOE: Maître d'Œuvre
-PMP: Project Management Professional (Certification)
 SPI: Schedule Performance Index
-TF: Taux de Fréquence (accidents)
-TG: Taux de Gravité (accidents)
+TF: Taux de Fréquence | TG: Taux de Gravité
 TP: Travaux Publics
 
 FIN DU GLOSSAIRE — Construction Tunisie ERP
@@ -1293,10 +893,10 @@ FIN DU GLOSSAIRE — Construction Tunisie ERP
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# 8. SUMMARY
+# SUMMARY
 # ════════════════════════════════════════════════════════════════════════════
 print("\n" + "="*60)
-print("✅ ALL DOCUMENTS GENERATED SUCCESSFULLY")
+print("✅ ALL STATIC DOCUMENTS GENERATED SUCCESSFULLY")
 print("="*60)
 
 total_chars = 0
@@ -1309,6 +909,8 @@ for root, dirs, files in os.walk("rag_documents"):
         doc_count += 1
 
 print(f"📄 Total documents: {doc_count}")
-print(f"📝 Total size: {total_chars:,} characters (~{total_chars//5:,} tokens)")
+print(f"📝 Total size: {total_chars:,} chars (~{total_chars//5:,} tokens)")
 print(f"📁 Folder: rag_documents/")
-print("\nNext step: run python vector.py to index everything!")
+print("\nNext step: python vector.py to index everything!")
+print("\nNOTE: Live data (projects, employees, KPIs, equipment, suppliers)")
+print("      is served via API endpoints to the LLM planner — not in RAG.")

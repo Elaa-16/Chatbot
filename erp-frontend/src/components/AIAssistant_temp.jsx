@@ -14,7 +14,7 @@ fontLink.rel = 'stylesheet';
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap';
 document.head.appendChild(fontLink);
 
-const SUGGESTIONS = ['Statut des projets', 'Budget total', 'Projets en retard', 'Employés en congé', 'KPIs du mois'];
+const SUGGESTIONS = ['Statut des projets', 'Budget total', 'Projets en retard', 'Employés en congé'];
 
 const makeWelcomeMessage = () => ({
   id: 1, role: 'bot',
@@ -30,8 +30,19 @@ const makeNewConversation = () => ({
   messages: [makeWelcomeMessage()],
 });
 
+const getUserId = () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return 'anonymous';
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    return payload.sub || payload.user_id || payload.id || 'anonymous';
+  } catch {
+    return 'anonymous';
+  }
+};
+
 const getBotResponse = async (userMessage, lastExchange = {}) => {
-  const token    = localStorage.getItem("access_token");
+  const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("user_role");
   const userId   = localStorage.getItem("user_id");
   const userName = localStorage.getItem("user_name");
@@ -867,8 +878,18 @@ const getRoleConfig = (role) => {
   return { label: role || 'Utilisateur', color: '#93c5fd', bg: 'rgba(147,197,253,0.1)', dot: '#60a5fa' };
 };
 const getUserFromJWT = () => {
-  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-  if (token) { const p = decodeJWT(token); if (p) return { name: p.name||p.username||p.sub||'Utilisateur', role: p.role||p.roles?.[0]||'user', email: p.email||'' }; }
+  const token = localStorage.getItem('token');
+  if (token) {
+    const p = decodeJWT(token);
+    if (p) {
+      // Convert "nadia.hamdi" → "Nadia Hamdi"
+      const name = (p.name || p.sub || 'Utilisateur')
+        .split('.')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+      return { name, role: p.role || 'user', email: p.email || '' };
+    }
+  }
   return null;
 };
 
@@ -876,8 +897,29 @@ const getUserFromJWT = () => {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 const AIAssistant = ({ onClose, user: userProp }) => {
-  const [conversations, setConversations] = useState(() => { const f = makeNewConversation(); return [f]; });
-  const [activeConvId, setActiveConvId]   = useState(() => conversations[0].id);
+const [conversations, setConversations] = useState(() => {
+  try {
+    const userId = getUserId();
+    const saved = localStorage.getItem(`erp_chat_conversations_${userId}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.length) return parsed;
+    }
+  } catch {}
+  return [makeNewConversation()];
+});
+
+const [activeConvId, setActiveConvId] = useState(() => {
+  try {
+    const userId = getUserId();
+    const saved = localStorage.getItem(`erp_chat_conversations_${userId}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.length) return parsed[0].id;
+    }
+  } catch {}
+  return conversations?.[0]?.id ?? Date.now();
+});
   const activeConv  = conversations.find(c => c.id === activeConvId);
   const messages    = activeConv?.messages || [];
 
@@ -891,6 +933,12 @@ const AIAssistant = ({ onClose, user: userProp }) => {
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [micError, setMicError]         = useState('');
   const [inputFocused, setInputFocused] = useState(false);
+  useEffect(() => {
+  try {
+    localStorage.setItem('erp_chat_conversations', JSON.stringify(conversations));
+
+  } catch {}
+}, [conversations]);
 
   const messagesEndRef  = useRef(null);
   const fileInputRef    = useRef(null);
@@ -1012,7 +1060,7 @@ const AIAssistant = ({ onClose, user: userProp }) => {
         .del-btn{opacity:0;transition:opacity .13s;background:none;border:none;cursor:pointer;padding:3px;border-radius:5px;display:flex;align-items:center;color:${C.textMuted}}
         .del-btn:hover{color:#f87171!important;background:rgba(239,68,68,0.1)!important}
         .pill{transition:all .18s;cursor:pointer}
-        .pill:hover{background:${C.accent}!important;color:#fff!important;border-color:${C.accent}!important;transform:translateY(-1px)}
+        .pill { cursor: default !important; }  /* supprimer le hover actif */
         .icon-btn{transition:all .15s;cursor:pointer;background:none;border:none;border-radius:9px;padding:9px;display:flex;align-items:center}
         .icon-btn:hover{background:${C.accentSubtle}!important;color:${C.accentText}!important}
         .send-btn{transition:all .2s cubic-bezier(.34,1.56,.64,1)}
@@ -1164,8 +1212,22 @@ const AIAssistant = ({ onClose, user: userProp }) => {
               </span>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {SUGGESTIONS.map(s => (
-                  <button key={s} className="pill" onClick={() => sendMessage(s)} style={{ backgroundColor:C.accentSubtle, color:C.accentText, border:`1px solid ${C.accent}25`, borderRadius:20, padding:'5px 13px', fontFamily:"'Instrument Sans',sans-serif", fontSize:12.5, fontWeight:500 }}>{s}</button>
-                ))}
+                  <span key={s} className="pill" style={{
+                    backgroundColor: C.accentSubtle,
+                    color: C.accentText,
+                    border: `1px solid ${C.accent}25`,
+                    borderRadius: 20,
+                    padding: '5px 13px',
+                    fontFamily: "'Instrument Sans',sans-serif",
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    cursor: 'default',        // ← plus de pointer
+                    userSelect: 'none',       // ← pas sélectionnable
+                    display: 'inline-block',
+  }}>
+    {s}
+  </span>
+))}
               </div>
             </div>
           </div>

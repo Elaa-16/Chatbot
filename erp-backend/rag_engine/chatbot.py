@@ -3,7 +3,7 @@ from functools import partial
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
-from chat import answer_question
+from rag_engine.chat import answer_question
 
 router = APIRouter()
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -24,6 +24,7 @@ async def chat_endpoint(request: Request, body: ChatRequest):
         raise HTTPException(status_code=401, detail="Token manquant")
 
     token = auth_header.replace("Bearer ", "").strip()
+    print(f"DEBUG chatbot token: {token[:30]}")
 
     if not body.message.strip():
         raise HTTPException(status_code=400, detail="Message vide")

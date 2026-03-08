@@ -12,18 +12,9 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    console.log('Interceptor hit — token present:', !!token, '| URL:', config.url); // ← remove after debugging
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      return config;
-    }
-    const auth = localStorage.getItem('auth');
-    if (auth) {
-      try {
-        const { username, password } = JSON.parse(auth);
-        config.auth = { username, password };
-      } catch {
-        localStorage.removeItem('auth');
-      }
     }
     return config;
   },
@@ -35,7 +26,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      ['token', 'auth', 'user', 'access_token', 'user_role', 'user_id', 'user_name']
+      ['token', 'user', 'user_role', 'user_id', 'user_name']
         .forEach(k => localStorage.removeItem(k));
       window.location.href = '/login';
     }
@@ -45,31 +36,30 @@ api.interceptors.response.use(
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const login = async (username, password) => {
-  // Plain axios (no interceptor) to avoid auth loop on login failure
   const response = await axios.post(`${API_BASE_URL}/login`, { username, password });
   const { access_token, user } = response.data;
 
   if (!access_token) throw new Error('Pas de token reçu du serveur');
 
-  // Store full user object — must_change_password is preserved inside
-  localStorage.setItem('token',        access_token);
-  localStorage.setItem('user',         JSON.stringify(user));
-  localStorage.setItem('auth',         JSON.stringify({ username, password }));
-  localStorage.setItem('access_token', access_token);
-  localStorage.setItem('user_role',    user.role);
-  localStorage.setItem('user_id',      user.employee_id);
-  localStorage.setItem('user_name',    `${user.first_name} ${user.last_name}`);
+  localStorage.setItem('token',     access_token);
+  localStorage.setItem('user',      JSON.stringify(user));
+  localStorage.setItem('user_role', user.role);
+  localStorage.setItem('user_id',   user.employee_id);
+  localStorage.setItem('user_name', `${user.first_name} ${user.last_name}`);
 
-  // Return FULL user object so AuthContext receives must_change_password
   return user;
 };
 
 export const logout = () => {
-  ['token', 'auth', 'user', 'access_token', 'user_role', 'user_id', 'user_name']
+  ['token', 'user', 'user_role', 'user_id', 'user_name']
     .forEach(k => localStorage.removeItem(k));
 };
 
 export const getMe = () => api.get('/me');
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+export const sendChatMessage = (message, context = {}) =>
+  api.post('/chat', { message, ...context });
 
 // ─── Projects ────────────────────────────────────────────────────────────────
 export const getProjects     = ()         => api.get('/projects');
@@ -81,15 +71,15 @@ export const deleteProject   = (id)       => api.delete(`/projects/${id}`);
 // ─── Tasks ───────────────────────────────────────────────────────────────────
 export const getTasks        = ()         => api.get('/tasks');
 export const getTask         = (id)       => api.get(`/tasks/${id}`);
-export const getProjectTasks = (pid)      => api.get(`/tasks/project/${pid}`);
+export const getProjectTasks = (pid)      => api.get(`/tasks?project_id=${pid}`);
 export const createTask      = (data)     => api.post('/tasks', data);
 export const updateTask      = (id, data) => api.put(`/tasks/${id}`, data);
 export const deleteTask      = (id)       => api.delete(`/tasks/${id}`);
 
-// ─── Issues / Incidents ──────────────────────────────────────────────────────
+// ─── Issues ──────────────────────────────────────────────────────────────────
 export const getIssues        = (params)   => api.get('/issues', { params });
 export const getIssue         = (id)       => api.get(`/issues/${id}`);
-export const getProjectIssues = (pid)      => api.get(`/issues/project/${pid}`);
+export const getProjectIssues = (pid)      => api.get(`/issues?project_id=${pid}`);
 export const createIssue      = (data)     => api.post('/issues', data);
 export const updateIssue      = (id, data) => api.put(`/issues/${id}`, data);
 export const deleteIssue      = (id)       => api.delete(`/issues/${id}`);
@@ -101,12 +91,9 @@ export const createEmployee  = (data)     => api.post('/employees', data);
 export const updateEmployee  = (id, data) => api.put(`/employees/${id}`, data);
 export const deleteEmployee  = (id)       => api.delete(`/employees/${id}`);
 
-// ─── Clients ─────────────────────────────────────────────────────────────────
-export const getClients    = ()         => api.get('/clients');
-export const getClient     = (id)       => api.get(`/clients/${id}`);
-export const createClient  = (data)     => api.post('/clients', data);
-export const updateClient  = (id, data) => api.put(`/clients/${id}`, data);
-export const deleteClient  = (id)       => api.delete(`/clients/${id}`);
+// ─── Clients (derived from projects — no /clients endpoint) ──────────────────
+// Clients.jsx fetches directly from /projects and extracts unique client_name values.
+// No API calls needed here.
 
 // ─── KPIs ────────────────────────────────────────────────────────────────────
 export const getKPIs        = ()          => api.get('/kpis');
@@ -116,8 +103,8 @@ export const updateKPI      = (id, data)  => api.put(`/kpis/${id}`, data);
 export const deleteKPI      = (id)        => api.delete(`/kpis/${id}`);
 
 // ─── Reports ─────────────────────────────────────────────────────────────────
-export const getReports     = (type)     => api.get('/reports', { params: type ? { report_type: type } : {} });
-export const generateReport = (data)     => api.post('/reports/generate', data);
+export const getReports     = (type) => api.get('/reports', { params: type ? { report_type: type } : {} });
+export const generateReport = (data) => api.post('/reports/generate', data);
 
 // ─── Notifications ───────────────────────────────────────────────────────────
 export const getNotifications         = ()   => api.get('/notifications');
@@ -126,11 +113,13 @@ export const markNotificationRead     = (id) => api.put(`/notifications/${id}/re
 export const markAllNotificationsRead = ()   => api.put('/notifications/mark-all-read');
 
 // ─── Leave Requests ──────────────────────────────────────────────────────────
-export const getLeaves    = ()         => api.get('/leave-requests');
-export const getLeave     = (id)       => api.get(`/leave-requests/${id}`);
-export const createLeave  = (data)     => api.post('/leave-requests', data);
-export const updateLeave  = (id, data) => api.put(`/leave-requests/${id}`, data);
-export const deleteLeave  = (id)       => api.delete(`/leave-requests/${id}`);
+export const getLeaves       = ()         => api.get('/leave-requests');
+export const getLeave        = (id)       => api.get(`/leave-requests/${id}`);
+export const createLeave     = (data)     => api.post('/leave-requests', data);
+export const updateLeave     = (id, data) => api.put(`/leave-requests/${id}`, data);
+export const approveLeave    = (id)       => api.put(`/leave-requests/${id}/approve`);
+export const rejectLeave     = (id, comment) => api.put(`/leave-requests/${id}/reject`, null, { params: { review_comment: comment } });
+export const cancelLeave     = (id)       => api.put(`/leave-requests/${id}/cancel`);
 
 // ─── Equipment ───────────────────────────────────────────────────────────────
 export const getEquipment     = ()         => api.get('/equipment');
@@ -147,14 +136,16 @@ export const updateSupplier = (id, data) => api.put(`/suppliers/${id}`, data);
 export const deleteSupplier = (id)       => api.delete(`/suppliers/${id}`);
 
 // ─── Purchase Orders ─────────────────────────────────────────────────────────
-export const getPurchaseOrders   = ()          => api.get('/purchase-orders');
-export const getPurchaseOrder    = (id)        => api.get(`/purchase-orders/${id}`);
-export const createPurchaseOrder = (data)      => api.post('/purchase-orders', data);
-export const updatePurchaseOrder = (id, data)  => api.put(`/purchase-orders/${id}`, data);
-export const deletePurchaseOrder = (id)        => api.delete(`/purchase-orders/${id}`);
+export const getPurchaseOrders   = ()         => api.get('/purchase-orders');
+export const getPurchaseOrder    = (id)       => api.get(`/purchase-orders/${id}`);
+export const createPurchaseOrder = (data)     => api.post('/purchase-orders', data);
+export const updatePurchaseOrder = (id, data) => api.put(`/purchase-orders/${id}`, data);
+export const deletePurchaseOrder = (id)       => api.delete(`/purchase-orders/${id}`);
 
 // ─── Stats ───────────────────────────────────────────────────────────────────
-export const getStats     = () => api.get('/stats/summary');
-export const getTaskStats = () => api.get('/stats/tasks');
+export const getStats          = () => api.get('/stats/summary');
+export const getTaskStats      = () => api.get('/stats/tasks');
+export const getEquipmentStats = () => api.get('/stats/equipment');
+export const getIssueStats     = () => api.get('/stats/issues');
 
 export default api;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Building2, Eye, X, FolderKanban } from 'lucide-react';
-import api from '../services/api';
+import { getProjects } from '../services/api';
 
 const Clients = () => {
   const { user } = useAuth();
@@ -18,41 +18,42 @@ const Clients = () => {
 
   const loadData = async () => {
     try {
-      const response = await api.get('/projects');
+      const response = await getProjects();
       const projectsData = response.data;
       setProjects(projectsData);
-      
+
       // Extraire les clients uniques des projets
       const uniqueClients = {};
       projectsData.forEach(project => {
-        if (project.client_name && !uniqueClients[project.client_name]) {
+        if (!project.client_name) return;
+
+        if (!uniqueClients[project.client_name]) {
           uniqueClients[project.client_name] = {
             client_name: project.client_name,
             total_projects: 0,
             total_budget: 0,
             total_actual_cost: 0,
             active_projects: 0,
-            completed_projects: 0
+            completed_projects: 0,
           };
         }
-        
-        if (project.client_name) {
-          uniqueClients[project.client_name].total_projects++;
-          uniqueClients[project.client_name].total_budget += project.budget_eur || 0;
-          uniqueClients[project.client_name].total_actual_cost += project.actual_cost_eur || 0;
-          
-          if (project.status === 'In Progress' || project.status === 'Planning') {
-            uniqueClients[project.client_name].active_projects++;
-          }
-          if (project.status === 'Completed') {
-            uniqueClients[project.client_name].completed_projects++;
-          }
+
+        const c = uniqueClients[project.client_name];
+        c.total_projects++;
+        c.total_budget += project.budget_eur || 0;
+        c.total_actual_cost += project.actual_cost_eur || 0;
+
+        if (project.status === 'In Progress' || project.status === 'Planning') {
+          c.active_projects++;
+        }
+        if (project.status === 'Completed') {
+          c.completed_projects++;
         }
       });
-      
+
       setClients(Object.values(uniqueClients));
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading clients:', error);
     } finally {
       setLoading(false);
     }
@@ -60,15 +61,11 @@ const Clients = () => {
 
   const handleViewDetails = (client) => {
     setSelectedClient(client);
-    
-    // Filtrer les projets de ce client
-    const filteredProjects = projects.filter(p => p.client_name === client.client_name);
-    setClientProjects(filteredProjects);
+    setClientProjects(projects.filter(p => p.client_name === client.client_name));
     setShowDetailsModal(true);
   };
 
   const getClientType = (clientName) => {
-    // Déterminer le type de client basé sur le nom
     if (clientName.includes('Ministère') || clientName.includes('Municipalité') || clientName.includes('Gouvernorat')) {
       return { type: 'Gouvernement', color: 'bg-purple-100 text-purple-800' };
     } else if (clientName.includes('ONAS') || clientName.includes('UNESCO')) {
@@ -86,6 +83,7 @@ const Clients = () => {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -124,8 +122,10 @@ const Clients = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {clients.map((client, index) => {
           const clientType = getClientType(client.client_name);
-          const budgetUsage = ((client.total_actual_cost / client.total_budget) * 100).toFixed(1);
-          
+          const budgetUsage = client.total_budget > 0
+            ? ((client.total_actual_cost / client.total_budget) * 100).toFixed(1)
+            : 0;
+
           return (
             <div key={index} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6">
               <div className="flex justify-between items-start mb-4">
@@ -155,21 +155,17 @@ const Clients = () => {
               {/* Financial Info */}
               <div className="border-t pt-4 mb-4">
                 <div className="space-y-2">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Budget total</span>
-                      <span className="font-semibold text-indigo-600">
-                        {(client.total_budget / 1000000).toFixed(2)}M €
-                      </span>
-                    </div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Budget total</span>
+                    <span className="font-semibold text-indigo-600">
+                      {(client.total_budget / 1000000).toFixed(2)}M €
+                    </span>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">Dépensé</span>
-                      <span className="font-semibold text-orange-600">
-                        {(client.total_actual_cost / 1000000).toFixed(2)}M €
-                      </span>
-                    </div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Dépensé</span>
+                    <span className="font-semibold text-orange-600">
+                      {(client.total_actual_cost / 1000000).toFixed(2)}M €
+                    </span>
                   </div>
                   <div>
                     <div className="text-xs text-gray-600 mb-1">Utilisation budget</div>
@@ -179,14 +175,13 @@ const Clients = () => {
                           budgetUsage > 100 ? 'bg-red-500' : 'bg-green-500'
                         }`}
                         style={{ width: `${Math.min(budgetUsage, 100)}%` }}
-                      ></div>
+                      />
                     </div>
                     <div className="text-xs text-right mt-1 font-medium">{budgetUsage}%</div>
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
               <button
                 onClick={() => handleViewDetails(client)}
                 className="w-full flex items-center justify-center space-x-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded hover:bg-indigo-100 transition"
@@ -222,10 +217,7 @@ const Clients = () => {
                     <span className="text-blue-600">{selectedClient.completed_projects} terminé(s)</span>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setShowDetailsModal(false)} 
-                  className="text-gray-500 hover:text-gray-700"
-                >
+                <button onClick={() => setShowDetailsModal(false)} className="text-gray-500 hover:text-gray-700">
                   <X className="w-6 h-6" />
                 </button>
               </div>
@@ -270,14 +262,14 @@ const Clients = () => {
                           <div className="text-sm text-gray-600">{project.project_type} • {project.location}</div>
                         </div>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          project.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                          project.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
+                          project.status === 'Completed'  ? 'bg-green-100 text-green-800' :
+                          project.status === 'In Progress'? 'bg-blue-100 text-blue-800'  :
+                                                            'bg-gray-100 text-gray-800'
                         }`}>
                           {project.status}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-4 mt-3 text-sm">
                         <div>
                           <div className="text-gray-600">Budget</div>
@@ -293,19 +285,19 @@ const Clients = () => {
                         </div>
                       </div>
 
-                      {/* Progress Bar */}
                       <div className="mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-indigo-600 h-2 rounded-full transition-all"
                             style={{ width: `${project.completion_percentage}%` }}
-                          ></div>
+                          />
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
+
             </div>
           </div>
         </div>

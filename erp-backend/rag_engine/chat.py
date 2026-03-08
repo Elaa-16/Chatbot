@@ -488,7 +488,10 @@ REGLES DE MAPPING:
 - projets a risque critique, risque le plus critique → /kpis avec {{"risk_level": "High"}}
 - IMPORTANT: pour /kpis le risque max est "High", jamais "Critical"
 - taches critiques → /tasks avec {{"priority": "Critical"}}
-- taches critiques non terminees, taches critiques ouvertes → /tasks avec {{"priority": "Critical"}} UNIQUEMENT (PAS de filtre status — le filtrage status != Done est fait cote Python)
+- taches critiques non terminees, taches non terminees, taches a faire → /tasks avec {{"priority": "Critical", "status": "Todo"}}
+- taches critiques en cours → /tasks avec {{"priority": "Critical", "status": "In Progress"}}
+- taches critiques bloquees → /tasks avec {{"priority": "Critical", "status": "Blocked"}}
+- taches critiques (sans precision) → /tasks avec {{"priority": "Critical"}}
 - taches bloquees → /tasks avec {{"status": "Blocked"}}
 - taches a faire, non terminees → /tasks avec {{"status": "Todo"}}
 - taches en cours → /tasks avec {{"status": "In Progress"}}
@@ -551,6 +554,9 @@ REGLE EQUIPE MANAGER (CRITIQUE):
 - supervised_by est un filtre virtuel traite par le systeme, pas par la base de donnees
 
 EXEMPLES (imite exactement ce format):
+
+Question: "Quelles sont les tâches critiques non terminées ?"
+JSON: {{"reasoning": "Taches Critical avec status Todo uniquement", "endpoints": [{{"endpoint": "/tasks", "filters": {{"priority": "Critical", "status": "Todo"}}}}]}}
 
 Question: "Quels sont les projets en retard ?"
 JSON: {{"reasoning": "La question porte sur les projets en retard, mapping vers /kpis avec delayed:true", "endpoints": [{{"endpoint": "/kpis", "filters": {{"delayed": true}}}}]}}
@@ -670,6 +676,11 @@ rag_doc_chain  = rag_doc_prompt | answer_model
 # ═══════════════════════════════════════════════════════════════════════════════
 # FORMAT HELPERS
 # ═══════════════════════════════════════════════════════════════════════════════
+def _resolve_name(emp_id: str) -> str:
+    for e in _EMPLOYEE_CACHE:
+        if e["id"] == emp_id:
+            return e["full_name"]
+    return emp_id
 def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -> str:
     label = endpoint.strip("/").replace("/", "-").upper()
     items = data if isinstance(data, list) else [data]
@@ -697,7 +708,8 @@ def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -
             f"- {r.get('task_id','')}: {r.get('title','')} | "
             f"Statut: {r.get('status','')} | Priorite: {r.get('priority','')} | "
             f"Echeance: {r.get('due_date','')} | "
-            f"Assigne a: {r.get('assigned_to','')} | Projet: {r.get('project_id','')}"
+            f"Assigne a: {_resolve_name(r.get('assigned_to',''))} | "
+            f"Projet: {r.get('project_id','')}"
             for r in items
         ]
         return f"=== {label} ===\nResultats ({len(items)}):\n" + "\n".join(lines) + "\n"
@@ -1020,18 +1032,20 @@ _EMPLOYEE_CACHE: list[dict] = []
 def load_employee_cache(token: str = "") -> None:
     global _EMPLOYEE_CACHE
     if not token:
+        print("DEBUG load_employee_cache: token is EMPTY — skipping")
         return
+    print(f"DEBUG load_employee_cache: len={len(token)} token={token[:50]}")
     try:
         resp = requests.get(
             f"{API_BASE_URL}/employees",
             headers={"Authorization": f"Bearer {token}"},
             timeout=15
         )
+        print(f"DEBUG load_employee_cache: status={resp.status_code}")
         if resp.status_code != 200:
             logger.warning("load_employee_cache: API → %d", resp.status_code)
             return
         rows = resp.json()
-
         _EMPLOYEE_CACHE = []
         for r in rows:
             fn, ln = r.get("first_name", ""), r.get("last_name", "")
@@ -1274,7 +1288,7 @@ def answer_question(
                 and any(kw in q_lower for kw in _person_keywords)):
             logger.warning("Manager %s asked about unknown person '%s' → access denied",
                            user_id, " ".join(_name_words))
-            return "⛔ Accès refusé : cet employé n'appartient pas à votre équipe ou n'existe pas."
+            return "⛔ Accès refusé : cet employé n'appartient pas à votre équipe."
 
     # #H2 — Glossaire
     if is_definition_question(q_lower):
@@ -1355,6 +1369,13 @@ def answer_question(
         logger.warning("Planner over-fetched %d endpoints → tronqué à 6", len(deduped))
         deduped = deduped[:6]
     plan["endpoints"] = deduped
+    
+    for item in plan.get("endpoints", []):
+        if item.get("endpoint") == "/tasks":
+            f = item.get("filters", {})
+            if f.get("priority") == "Critical" and "status" in f:
+                f.pop("status")
+                logger.info("POST-PLAN: status retiré de /tasks Critical — géré par Python")
 
     # Context window management
     _ANALYTICAL_WORDS = ["quel","quels","meilleur","pire","top","classement",
@@ -1556,6 +1577,7 @@ def answer_question(
             before_nt = len(data)
             data = [r for r in data if r.get("status", "") != "Done"]
             logger.info("Filtre 'non terminées': %d → %d (Done exclus)", before_nt, len(data))
+                                
 
         # Row limit
         row_limit = item.get("_row_limit")
@@ -1721,7 +1743,12 @@ def answer_question(
     if (live_context == "Aucune donnee live — question documentaire."
             and any(w in q_lower for w in _DATA_WORDS)):
         logger.warning("Garde-fou anti-hallucination : pas de données live pour une question de données")
-        return "Aucune donnée disponible — impossible de récupérer les informations demandées."
+        return (
+    "Je suis votre assistant ERP BTP. 🏗️\n\n"
+    "Cette demande est hors de mon périmètre (météo, données externes, etc.).\n\n"
+    "Je peux vous aider sur : projets, KPIs, employés, tâches, "
+    "congés, incidents, équipements, fournisseurs et procédures internes."
+)
 
     # Step 4 : Documentary context
     doc_chunks_reranked = _rerank_doc_chunks(doc_chunks, question, top_k=3)
@@ -1759,14 +1786,37 @@ def answer_question(
     if _hallucinated_labels:
         logger.warning("LLM hallucinated labels %s not in live_context → fallback", _hallucinated_labels)
 
-    if _answer_useless and "=== " in live_context and "Resultats (" in live_context:
-        logger.warning("LLM answer empty/useless — falling back to live_context directly")
-        _blocks = _re.findall(r"=== [A-Z][A-Z\-()/ ]* ===\nResultats \(\d+\):.*?(?=\n=== |$)",
-                              live_context, _re.DOTALL)
-        if _blocks:
-            answer = "\n\n".join(b.strip() for b in _blocks)
-        else:
-            answer = live_context.strip()
+        if _answer_useless and "=== " in live_context and "Resultats (" in live_context:
+            logger.warning("LLM answer empty/useless — falling back to live_context directly")
+            _blocks = _re.findall(r"=== [A-Z][A-Z\-()/ ]* ===\nResultats \(\d+\):.*?(?=\n=== |$)",
+                                live_context, _re.DOTALL)
+            if _blocks:
+                answer = "\n\n".join(b.strip() for b in _blocks)
+            else:
+                answer = live_context.strip()
 
-    logger.info("=== RAW ANSWER ===\n%s\n==================", repr(answer))
+        # ── Fallback final : réponse vide ou hors périmètre ──────────────────────
+        _EMPTY_ANSWERS = {
+            "aucune donnée disponible pour cette requête.",
+            "aucune donnée disponible — impossible de récupérer les informations demandées.",
+            "je n'ai pas trouvé de documentation sur ce sujet.",
+            "",
+        }
+        if not answer or answer.strip().lower() in _EMPTY_ANSWERS:
+            answer = (
+                "Je suis votre assistant ERP BTP. 🏗️\n\n"
+                "Je n'ai pas pu récupérer cette information — "
+                "elle est probablement hors de mon périmètre "
+                "(météo, actualités, données externes, etc.).\n\n"
+                "Je peux vous aider sur :\n"
+                "  • 📁 Projets & KPIs\n"
+                "  • 👷 Employés & équipes\n"
+                "  • ✅ Tâches & incidents\n"
+                "  • 🏖️ Congés & absences\n"
+                "  • 🔧 Équipements & fournisseurs\n"
+                "  • 📋 Procédures & politiques internes"
+            )
+            logger.info("Fallback final déclenché — réponse hors périmètre")
+
+        logger.info("=== RAW ANSWER ===\n%s\n==================", repr(answer))
     return answer

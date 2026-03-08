@@ -38,7 +38,7 @@ const Navbar = () => {
   };
 
   const allNavItems = [
-    { path: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo', 'manager', 'employee', 'rh'] },
+    { path: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo', 'manager', 'employee'] },
     { path: '/projects',       label: 'Projets',       icon: FolderKanban,    roles: ['ceo', 'manager', 'employee'] },
     { path: '/tasks',          label: 'Tâches',        icon: CheckSquare,     roles: ['ceo', 'manager', 'employee'] },
     { path: '/issues',         label: 'Incidents',     icon: AlertTriangle,   roles: ['ceo', 'manager', 'employee'] },
@@ -48,15 +48,17 @@ const Navbar = () => {
     { path: '/kpis',           label: 'KPIs',          icon: BarChart3,       roles: ['ceo', 'manager'] },
     { path: '/leave-requests', label: 'Congés',        icon: Calendar,        roles: ['ceo', 'manager', 'employee', 'rh'] },
     { path: '/notifications',  label: 'Notifications', icon: Bell,            roles: ['ceo', 'manager', 'employee', 'rh'], badge: unreadCount },
-];
+  ];
 
-const navItems = allNavItems.filter(item => item.roles.includes(user?.role));
- const roleConfig = {
+  const navItems = allNavItems.filter(item => item.roles.includes(user?.role));
+
+  const roleConfig = {
     ceo:      { gradient: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', label: 'CEO',     icon: Crown,       description: 'Accès complet'   },
     manager:  { gradient: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)', label: 'Manager', icon: Shield,      description: "Gestion d'équipe" },
     employee: { gradient: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)', label: 'Employé', icon: UserCircle,  description: 'Accès standard'   },
     rh:       { gradient: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)', label: 'RH',      icon: Users,       description: 'Gestion RH'       },
-};
+  };
+
   const role = roleConfig[user?.role] || roleConfig.employee;
   const RoleIcon = role.icon;
 

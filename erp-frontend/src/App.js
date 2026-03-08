@@ -15,9 +15,22 @@ import Issues from './components/Issues';
 import ChangePassword from './components/ChangePassword';
 import Reports from './components/Reports';
 
-const PrivateRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+// ── Redirect based on role after login ────────────────────────────────────────
+const getHomePage = (user) => {
+  if (!user) return '/login';
+  if (user.must_change_password) return '/change-password';
+  if (user.role === 'rh') return '/employees';
+  return '/dashboard';
+};
+
+// ── Protect routes + block rh from non-rh pages ──────────────────────────────
+const PrivateRoute = ({ children, allowedRoles }) => {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    return <Navigate to={getHomePage(user)} />;
+  }
+  return children;
 };
 
 const SIDEBAR_WIDTH = 260;
@@ -39,30 +52,97 @@ const Layout = ({ children }) => (
 
 function AppRoutes() {
   const { isAuthenticated, user } = useAuth();
+
   return (
     <Routes>
+      {/* Login */}
       <Route
         path="/login"
         element={
           isAuthenticated
-            ? user?.must_change_password
-              ? <Navigate to="/change-password" />
-              : <Navigate to="/dashboard" />
+            ? <Navigate to={getHomePage(user)} />
             : <Login />
         }
       />
+
+      {/* Change password */}
       <Route path="/change-password" element={<ChangePassword />} />
-      <Route path="/dashboard"      element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
-      <Route path="/projects"       element={<PrivateRoute><Layout><Projects /></Layout></PrivateRoute>} />
-      <Route path="/employees"      element={<PrivateRoute><Layout><Employees /></Layout></PrivateRoute>} />
-      <Route path="/kpis"           element={<PrivateRoute><Layout><KPIs /></Layout></PrivateRoute>} />
-      <Route path="/leave-requests" element={<PrivateRoute><Layout><LeaveRequests /></Layout></PrivateRoute>} />
-      <Route path="/clients"        element={<PrivateRoute><Layout><Clients /></Layout></PrivateRoute>} />
-      <Route path="/tasks"          element={<PrivateRoute><Layout><Tasks /></Layout></PrivateRoute>} />
-      <Route path="/reports"        element={<PrivateRoute><Layout><Reports /></Layout></PrivateRoute>} />
-      <Route path="/notifications"  element={<PrivateRoute><Layout><Notifications /></Layout></PrivateRoute>} />
-      <Route path="/issues"         element={<PrivateRoute><Layout><Issues /></Layout></PrivateRoute>} />
-      <Route path="/"               element={<Navigate to="/dashboard" />} />
+
+      {/* Dashboard — not for rh */}
+      <Route path="/dashboard" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+          <Layout><Dashboard /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Projects — not for rh */}
+      <Route path="/projects" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+          <Layout><Projects /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Tasks — not for rh */}
+      <Route path="/tasks" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+          <Layout><Tasks /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Issues — not for rh */}
+      <Route path="/issues" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+          <Layout><Issues /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Reports — ceo and manager only */}
+      <Route path="/reports" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+          <Layout><Reports /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Clients — ceo and manager only */}
+      <Route path="/clients" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+          <Layout><Clients /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* KPIs — ceo and manager only */}
+      <Route path="/kpis" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+          <Layout><KPIs /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Employees — all except employee */}
+      <Route path="/employees" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'rh']}>
+          <Layout><Employees /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Leave requests — everyone */}
+      <Route path="/leave-requests" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh']}>
+          <Layout><LeaveRequests /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Notifications — everyone */}
+      <Route path="/notifications" element={
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh']}>
+          <Layout><Notifications /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Root redirect */}
+      <Route path="/" element={<Navigate to={isAuthenticated ? getHomePage(user) : '/login'} />} />
+
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to={isAuthenticated ? getHomePage(user) : '/login'} />} />
     </Routes>
   );
 }
