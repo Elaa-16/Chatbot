@@ -1,0 +1,4 @@
+role,description,can_view_all_projects,can_view_own_projects,can_view_supervised_projects,can_view_all_employees,can_view_supervised_employees,can_view_all_salaries,can_view_own_salary,can_view_supervised_salaries,can_edit_projects,can_create_projects,can_approve_budgets
+ceo,Full access to all company data,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
+manager,Can view own projects and all projects of supervised employees,FALSE,TRUE,TRUE,FALSE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,FALSE
+employee,Can only view own assigned projects and personal data,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE

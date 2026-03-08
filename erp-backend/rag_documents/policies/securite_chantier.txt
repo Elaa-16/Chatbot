@@ -1,0 +1,85 @@
+
+POLITIQUE DE SÉCURITÉ ET SANTÉ AU TRAVAIL SUR CHANTIER
+Construction Tunisie ERP — Document HSE officiel
+========================================================
+Version: 3.1 | Date: Janvier 2026
+
+1. ÉQUIPEMENTS DE PROTECTION INDIVIDUELLE (EPI) OBLIGATOIRES
+--------------------------------------------------------------
+Tout personnel travaillant sur un chantier doit obligatoirement porter:
+- Casque de protection (norme EN 397)
+- Chaussures de sécurité (norme EN ISO 20345, embout acier)
+- Gilet haute visibilité (classe 3)
+- Gants de protection adaptés au travail effectué
+- Lunettes de protection lors des travaux de découpe, soudure, ou projection
+- Harnais de sécurité pour tout travail en hauteur supérieur à 2 mètres
+- Protège-oreilles lors des travaux bruyants (> 85 dB)
+- Masque anti-poussière (FFP2 minimum) lors des travaux poussiéreux
+
+Le non-port d'EPI est passible d'une avertissement au premier manquement
+et d'une sanction disciplinaire en cas de récidive.
+
+2. PROCÉDURE EN CAS D'ACCIDENT SUR CHANTIER
+---------------------------------------------
+2.1 Premiers secours immédiats (0-5 minutes)
+    - Alerter immédiatement: APPEL D'URGENCE: 190 (SAMU) / 198 (Protection Civile)
+    - Sécuriser la zone pour éviter tout accident secondaire
+    - Ne pas déplacer un blessé sauf danger immédiat
+    - Administrer les premiers secours si vous êtes formé
+
+2.2 Notification interne (dans l'heure)
+    - Appeler le Chef de chantier immédiatement
+    - Le Chef de chantier appelle le Chef de projet
+    - Le Chef de projet informe le Responsable HSE: +216 20 HSE 001
+    - Remplir le formulaire d'incident dans le système ERP (module Issues)
+
+2.3 Déclaration officielle (dans les 24 heures)
+    - Tout accident avec arrêt de travail doit être déclaré à la CNSS dans les 24h
+    - Un rapport d'incident complet doit être soumis via le système ERP
+    - Une enquête interne est déclenchée automatiquement pour tout accident grave
+
+2.4 Retour au travail
+    - Autorisation médicale obligatoire avant reprise après tout accident
+    - Visite de reprise avec le médecin du travail si arrêt > 8 jours
+
+3. RÈGLES DE SÉCURITÉ GÉNÉRALES
+---------------------------------
+- Interdit de consommer de l'alcool ou des substances psychoactives sur chantier
+- Vitesse limitée à 10 km/h sur toute zone de chantier pour les véhicules
+- Tout engin doit être inspecté avant utilisation (check-list quotidienne)
+- Les zones de fouille et tranchées doivent être balisées et éclairées
+- Stockage correct des matériaux: pas de matériaux instables en hauteur
+- Les extincteurs doivent être accessibles et vérifiés tous les 6 mois
+- Plan d'évacuation affiché à l'entrée de chaque chantier
+
+4. TRAVAUX EN HAUTEUR
+----------------------
+- Interdit de travailler en hauteur par vent > 60 km/h
+- Inspection quotidienne des échafaudages par le chef de chantier
+- Filets de protection obligatoires pour travaux > 3 mètres
+- Lignes de vie installées pour travaux sur toiture
+
+5. GESTION DES PRODUITS DANGEREUX
+-----------------------------------
+- Fiches de données de sécurité (FDS) disponibles pour tout produit chimique
+- Stockage séparé des produits inflammables (local ventilé, anti-feu)
+- Récipients correctement étiquetés obligatoirement
+- Formation à la manipulation des produits dangereux obligatoire
+
+6. FORMATION SÉCURITÉ
+----------------------
+- Formation sécurité initiale obligatoire pour tout nouveau employé (2 jours)
+- Recyclage annuel obligatoire (1/2 journée)
+- Formation premiers secours (PSC1) recommandée pour tout chef de chantier
+- Les formations sont enregistrées dans le profil employé sur l'ERP
+
+7. INDICATEURS HSE SUIVIS
+--------------------------
+- Nombre d'accidents avec arrêt (objectif: 0)
+- Nombre d'incidents sans arrêt
+- Taux de fréquence (TF) = Accidents × 1,000,000 / Heures travaillées
+- Taux de gravité (TG) = Jours perdus × 1,000 / Heures travaillées
+- Ces indicateurs sont suivis dans les KPIs de chaque projet sur l'ERP
+
+DOCUMENT HSE OFFICIEL — Construction Tunisie
+Responsable HSE: Département Sécurité | securite@construction-tn.com

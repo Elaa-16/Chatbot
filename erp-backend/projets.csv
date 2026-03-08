@@ -1,0 +1,21 @@
+project_id,project_name,project_type,client_name,start_date,end_date,status,budget_eur,actual_cost_eur,completion_percentage,location,project_manager_id,site_supervisor_id,description
+P001,Résidence Les Palmiers,Residential,Société Immobilière du Sud,2024-01-15,2025-06-30,In Progress,2500000,1800000,72,Tunis,E003,E007,Construction d'un complexe résidentiel de 45 appartements avec espaces verts
+P002,Centre Commercial Carthage,Commercial,Carthage Development Group,2023-09-01,2024-12-31,In Progress,5800000,5200000,89,La Marsa,E003,E008,Centre commercial moderne avec 80 boutiques et parking souterrain
+P003,Hôpital Régional Sfax,Healthcare,Ministère de la Santé,2024-03-01,2026-08-31,In Progress,12000000,4500000,38,Sfax,E010,E011,Hôpital régional de 200 lits avec équipements médicaux modernes
+P004,Complexe Sportif Sousse,Sports,Municipalité de Sousse,2024-06-15,2025-12-31,In Progress,3200000,1100000,34,Sousse,E010,E012,Complexe sportif avec piscine olympique et terrains multisports
+P005,Tour de Bureaux Lac 2,Office,Business Park Tunisia,2023-05-10,2024-11-30,Completed,4500000,4300000,100,Tunis,E003,E007,Tour de bureaux de 15 étages avec certification LEED
+P006,Villa Privée Gammarth,Residential,Mohamed Ben Ali,2024-08-01,2025-03-31,In Progress,850000,320000,38,Gammarth,E015,E016,Villa de luxe avec piscine et vue mer
+P007,Usine Agroalimentaire,Industrial,Agro-Tunisia SA,2024-02-20,2025-09-30,In Progress,6700000,3200000,48,Bizerte,E010,E011,Usine de transformation agroalimentaire avec chambres frigorifiques
+P008,École Primaire Manouba,Education,Ministère de l'Éducation,2024-05-01,2025-08-31,In Progress,1800000,750000,42,Manouba,E015,E016,École primaire de 20 classes avec cantine et bibliothèque
+P009,Pont Autoroutier A1,Infrastructure,Ministère de l'Équipement,2023-11-15,2025-05-31,In Progress,8900000,6100000,68,Hammamet,E003,E008,Pont autoroutier de 450m avec 4 voies
+P010,Rénovation Médina Kairouan,Renovation,UNESCO Tunisia,2024-07-01,2026-12-31,In Progress,2100000,450000,21,Kairouan,E015,E012,Restauration et rénovation de bâtiments historiques de la médina
+P011,Hôtel 5 Étoiles Djerba,Hospitality,Djerba Luxury Hotels,2024-01-10,2025-10-31,In Progress,9500000,5700000,60,Djerba,E010,E011,Hôtel 5 étoiles de 250 chambres avec spa et centre de thalassothérapie
+P012,Parking Multi-Étages Centre-Ville,Infrastructure,Municipalité de Tunis,2024-09-01,2025-11-30,In Progress,2800000,850000,30,Tunis,E003,E007,Parking de 6 étages avec 500 places et système automatisé
+P013,Résidence Universitaire,Education,Université de Carthage,2023-08-15,2024-10-31,Completed,3400000,3350000,100,Carthage,E015,E016,Résidence pour 400 étudiants avec salles d'étude et cafétéria
+P014,Entrepôt Logistique Radès,Industrial,LogiTrans Tunisia,2024-04-01,2025-02-28,In Progress,4200000,2500000,60,Radès,E010,E008,Entrepôt moderne de 15000m² avec quais de chargement
+P015,Centre Culturel Monastir,Cultural,Ministère des Affaires Culturelles,2024-10-01,2026-03-31,Planning,5600000,350000,6,Monastir,E003,E012,Centre culturel avec théâtre, galerie d'art et bibliothèque
+P016,Immeuble Résidentiel Nabeul,Residential,Promoteur Immobilier Nabeul,2024-03-15,2025-07-31,In Progress,1950000,1100000,56,Nabeul,E015,E016,Immeuble de 8 étages avec 32 appartements
+P017,Station d'Épuration,Infrastructure,ONAS,2023-12-01,2025-06-30,In Progress,7800000,4900000,63,Ben Arous,E010,E011,Station d'épuration des eaux usées capacité 50000 m³/jour
+P018,Complexe Administratif,Office,Gouvernorat de l'Ariana,2024-02-01,2025-09-30,In Progress,3900000,1800000,46,Ariana,E003,E007,Complexe administratif avec bureaux et salles de réunion
+P019,Mosquée Communautaire,Religious,Association Islamique Gabès,2024-05-20,2025-12-31,In Progress,1200000,550000,46,Gabès,E015,E012,Mosquée avec capacité de 1000 fidèles et école coranique
+P020,Parc Industriel,Industrial,Agence Foncière Industrielle,2023-10-01,2025-12-31,In Progress,15000000,9800000,65,Médenine,E010,E011,Développement d'un parc industriel de 50 hectares avec infrastructures

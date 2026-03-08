@@ -1,0 +1,336 @@
+
+GLOSSAIRE MÉTIER — BTP ET GESTION DE PROJETS DE CONSTRUCTION
+Construction Tunisie ERP
+=============================================================
+Ce glossaire définit tous les termes métier utilisés dans le système ERP,
+les projets de construction, et les communications internes.
+
+═══════════════════════════════════════════════════════════
+A
+═══════════════════════════════════════════════════════════
+
+Acier de structure
+  Barres d'acier utilisées comme armatures dans le béton armé.
+  Terme connexe: ferraillage, HA (Haute Adhérence)
+
+Appel d'offres (AO)
+  Procédure par laquelle le maître d'ouvrage sollicite des offres de plusieurs
+  entreprises pour la réalisation de travaux. Peut être ouvert ou restreint.
+
+Avenant
+  Modification contractuelle ajoutée à un marché de construction en cours.
+  Peut impacter le budget et le délai du projet.
+
+Avancement (completion_percentage dans l'ERP)
+  Pourcentage de réalisation d'un projet. Calculé sur la base des travaux
+  physiquement exécutés par rapport au total prévu.
+  Exemple: Un projet à 72% d'avancement a réalisé 72% de ses travaux.
+
+═══════════════════════════════════════════════════════════
+B
+═══════════════════════════════════════════════════════════
+
+Béton armé
+  Béton renforcé par des armatures en acier. Matériau de base de la
+  construction moderne. Résistance à la compression (béton) + traction (acier).
+
+Béton prêt à l'emploi (BPE)
+  Béton fabriqué en centrale et livré sur chantier par camion toupie.
+  Fourni par des centrales à béton, souvent via le fournisseur Ciments de Tunisie.
+
+Budget alloué (budget_eur dans l'ERP)
+  Montant total prévu pour réaliser un projet, en euros.
+  Comprend: main d'œuvre, matériaux, équipements, sous-traitance, frais généraux.
+
+Budget variance (budget_variance_percentage dans l'ERP)
+  Écart entre le budget prévu et le coût réel, exprimé en pourcentage.
+  Positif (+) = dépassement de budget (mauvais)
+  Négatif (-) = économie par rapport au budget (bon)
+  Exemple: budget_variance = +4.2% signifie que le projet dépasse son budget de 4.2%
+
+═══════════════════════════════════════════════════════════
+C
+═══════════════════════════════════════════════════════════
+
+Chantier
+  Lieu physique où s'effectuent les travaux de construction.
+  Chaque chantier est géré par un chef de chantier (site supervisor).
+
+Chef de chantier (Site Supervisor)
+  Responsable de la coordination quotidienne des travaux sur le terrain.
+  Gère les ouvriers, les livraisons, la sécurité et l'avancement quotidien.
+
+Chef de projet (Project Manager)
+  Responsable global d'un projet: planning, budget, qualité, relation client.
+  Dans l'ERP: champ project_manager_id.
+
+CPI — Cost Performance Index (Indice de Performance des Coûts)
+  Indicateur clé mesurant l'efficacité financière d'un projet.
+  CPI = Valeur acquise / Coût réel
+  CPI > 1.0: le projet est sous budget — bonne performance financière
+  CPI < 1.0: le projet dépasse le budget — attention requise
+  CPI = 1.0: le projet est exactement dans le budget
+  Dans l'ERP: champ cost_performance_index dans la table kpis.
+
+CNSS
+  Caisse Nationale de Sécurité Sociale. Organisme tunisien gérant
+  les cotisations sociales, les accidents du travail et les maladies professionnelles.
+
+Coffrage
+  Moule temporaire (bois, métal, plastique) dans lequel on coule le béton.
+  Retiré après durcissement du béton (décoffrage).
+
+Congé annuel (annual_leave dans l'ERP)
+  Dans l'ERP: annual_leave_total = jours accordés (35 jours standard)
+              annual_leave_taken = jours déjà pris
+              Solde restant = annual_leave_total - annual_leave_taken
+
+═══════════════════════════════════════════════════════════
+D
+═══════════════════════════════════════════════════════════
+
+Décompte
+  Document récapitulatif des travaux exécutés, servant de base à la facturation.
+  Établi périodiquement (mensuel en général) par le chef de projet.
+
+Délai contractuel
+  Date de livraison prévue dans le contrat de construction.
+  Tout dépassement peut entraîner des pénalités de retard.
+
+═══════════════════════════════════════════════════════════
+E
+═══════════════════════════════════════════════════════════
+
+EPI — Équipements de Protection Individuelle
+  Ensemble des équipements portés par les travailleurs pour se protéger:
+  casque, chaussures de sécurité, gilet, gants, lunettes, harnais.
+  Port obligatoire sur tous les chantiers de Construction Tunisie.
+
+ERP — Enterprise Resource Planning (Progiciel de Gestion Intégré)
+  Système informatique centralisant toutes les données de l'entreprise:
+  projets, employés, finances, équipements, fournisseurs, congés, KPIs.
+
+Études d'exécution
+  Plans et documents techniques détaillés permettant la réalisation des travaux.
+  Réalisés par le bureau d'études avant et pendant la construction.
+
+═══════════════════════════════════════════════════════════
+F
+═══════════════════════════════════════════════════════════
+
+Ferraillage
+  Mise en place des armatures en acier avant coulage du béton.
+  Opération réalisée par des ferraileurs qualifiés.
+
+Fondations
+  Partie de la structure transmettant les charges du bâtiment au sol.
+  Types: superficielles (semelles, radiers) ou profondes (pieux, micropieux).
+
+Fournisseur référencé
+  Entreprise approuvée et enregistrée dans le système ERP pour la fourniture
+  de matériaux, équipements ou services. Voir liste dans module Fournisseurs.
+
+═══════════════════════════════════════════════════════════
+G
+═══════════════════════════════════════════════════════════
+
+Gestion des risques (risk_level dans l'ERP)
+  Évaluation du niveau de risque d'un projet.
+  Low: risque faible, projet dans les normes
+  Medium: risque modéré, surveillance renforcée
+  High: risque élevé, intervention du management requise
+
+Grue
+  Engin de levage utilisé sur les chantiers pour déplacer des charges lourdes.
+  La Grue Mobile 50T (EQ001) est l'engin principal de la société.
+
+═══════════════════════════════════════════════════════════
+H
+═══════════════════════════════════════════════════════════
+
+HSE — Hygiène, Sécurité, Environnement
+  Département responsable de la sécurité sur les chantiers et du respect
+  des réglementations environnementales. Clé pour les KPIs safety_incidents.
+
+═══════════════════════════════════════════════════════════
+I
+═══════════════════════════════════════════════════════════
+
+Incident (Issues dans l'ERP)
+  Tout événement non planifié affectant un projet. Enregistré dans le module Issues.
+  Catégories: Safety, Quality, Delay, Budget, Technical, Other.
+  Sévérités: Low, Medium, High, Critical.
+
+IRM (Imagerie par Résonance Magnétique)
+  Équipement médical. Référencé dans la tâche T002 du projet Hôpital Régional Sfax (P003).
+
+═══════════════════════════════════════════════════════════
+K
+═══════════════════════════════════════════════════════════
+
+KPI — Key Performance Indicator (Indicateur Clé de Performance)
+  Mesure quantifiable évaluant la performance d'un projet.
+  KPIs suivis dans l'ERP:
+  - budget_variance_percentage: écart budgétaire en %
+  - schedule_variance_days: retard en jours (positif = retard, négatif = avance)
+  - quality_score: score qualité sur 100
+  - safety_incidents: nombre d'incidents sécurité
+  - client_satisfaction_score: note client sur 5
+  - team_productivity_percentage: productivité équipe en %
+  - cost_performance_index (CPI): indice performance coûts
+  - schedule_performance_index (SPI): indice performance calendrier
+  - risk_level: niveau de risque (Low/Medium/High)
+
+═══════════════════════════════════════════════════════════
+M
+═══════════════════════════════════════════════════════════
+
+Maître d'œuvre (MOE)
+  Entité technique responsable de la conception et du suivi des travaux.
+  Construction Tunisie agit en tant que maître d'œuvre sur ses projets.
+
+Maître d'ouvrage (MOA)
+  Client qui commande et finance les travaux. Propriétaire final de l'ouvrage.
+  Dans l'ERP: champ client_name dans la table projects.
+
+Marché de travaux
+  Contrat signé entre le client (MOA) et l'entreprise (MOE) pour la réalisation
+  de travaux de construction. Définit le périmètre, le prix et le délai.
+
+Masse salariale
+  Total des salaires et charges sociales versés aux employés sur une période.
+
+═══════════════════════════════════════════════════════════
+O
+═══════════════════════════════════════════════════════════
+
+Ouvrage
+  Résultat final de la construction (bâtiment, pont, route, etc.).
+
+═══════════════════════════════════════════════════════════
+P
+═══════════════════════════════════════════════════════════
+
+Plancher
+  Dalle horizontale séparant deux niveaux d'un bâtiment.
+
+Planning de chantier
+  Document définissant le séquencement et les dates des travaux.
+  Le retard par rapport au planning est mesuré par schedule_variance_days dans l'ERP.
+
+Prise en masse
+  Durcissement du béton après coulage. Durée minimale: 28 jours pour résistance totale.
+
+Projet (projects dans l'ERP)
+  Opération de construction gérée dans le système ERP.
+  Attributs clés: project_id, project_name, status, budget_eur, actual_cost_eur,
+  completion_percentage, location, start_date, end_date.
+  Statuts possibles: "In Progress" (en cours), "Completed" (terminé), "Planning" (en planification).
+
+═══════════════════════════════════════════════════════════
+Q
+═══════════════════════════════════════════════════════════
+
+Qualité (quality_score dans l'ERP)
+  Score sur 100 évaluant la qualité de réalisation d'un projet.
+  Basé sur: conformité aux plans, matériaux utilisés, finitions, contrôles.
+  Score > 90: excellente qualité | 80-90: bonne qualité | < 80: qualité insuffisante
+
+═══════════════════════════════════════════════════════════
+R
+═══════════════════════════════════════════════════════════
+
+RAG — Retrieval-Augmented Generation
+  Technique d'intelligence artificielle utilisée par le chatbot ERP.
+  Permet au chatbot de répondre en se basant sur des documents réels et des données live.
+
+Retard (schedule_variance_days dans l'ERP)
+  Nombre de jours de retard d'un projet par rapport au planning.
+  schedule_variance_days > 0: le projet est EN RETARD
+  schedule_variance_days < 0: le projet est EN AVANCE
+  schedule_variance_days = 0: le projet est DANS LES DÉLAIS
+
+Réception des travaux
+  Acte officiel par lequel le client accepte les travaux réalisés.
+  Peut être avec ou sans réserves. Déclenche le démarrage des garanties.
+
+═══════════════════════════════════════════════════════════
+S
+═══════════════════════════════════════════════════════════
+
+Satisfaction client (client_satisfaction_score dans l'ERP)
+  Note attribuée par le client sur 5 étoiles.
+  5/5: client très satisfait | 3/5: satisfaction modérée | < 3/5: client insatisfait
+
+Schedule Variance (SV)
+  Écart entre le travail planifié et le travail réellement effectué.
+  Mesure le retard ou l'avance en termes de valeur.
+
+SPI — Schedule Performance Index (Indice de Performance du Calendrier)
+  Indicateur mesurant l'efficacité par rapport au planning.
+  SPI = Valeur acquise / Valeur planifiée
+  SPI > 1.0: le projet est EN AVANCE sur le planning
+  SPI < 1.0: le projet est EN RETARD sur le planning
+  SPI = 1.0: le projet respecte exactement le planning
+
+Sous-traitant
+  Entreprise mandatée par Construction Tunisie pour réaliser une partie spécifique
+  des travaux (électricité, plomberie, menuiserie, etc.).
+  Exemples: Électricité Moderne (S004), Plomberie Services (S005).
+
+═══════════════════════════════════════════════════════════
+T
+═══════════════════════════════════════════════════════════
+
+Tâche (tasks dans l'ERP)
+  Unité de travail assignée à un employé dans le cadre d'un projet.
+  Statuts: "Todo" (à faire), "In Progress" (en cours), "Done" (terminée).
+  Priorités: "Critical" (critique), "High" (haute), "Medium" (moyenne).
+
+Timesheet (feuille de temps)
+  Enregistrement des heures travaillées par un employé sur un projet.
+  Saisi quotidiennement dans le module Timesheets de l'ERP.
+
+Travaux modificatifs acquéreur (TMA)
+  Modifications demandées par le client en cours de chantier.
+  Font l'objet d'un avenant et peuvent impacter budget et délai.
+
+Taux de fréquence (TF)
+  Indicateur HSE = Nombre d'accidents × 1,000,000 / Heures travaillées
+
+Taux de gravité (TG)
+  Indicateur HSE = Jours perdus × 1,000 / Heures travaillées
+
+═══════════════════════════════════════════════════════════
+V
+═══════════════════════════════════════════════════════════
+
+Valeur acquise (Earned Value)
+  Valeur du travail réellement effectué à un instant T.
+  Concept central de la gestion de projet moderne (méthode EVM).
+
+Variance budgétaire
+  Voir budget_variance_percentage. Écart entre budget prévu et coût réel.
+
+═══════════════════════════════════════════════════════════
+ABRÉVIATIONS COURANTES
+═══════════════════════════════════════════════════════════
+BPE: Béton Prêt à l'Emploi
+BTP: Bâtiment et Travaux Publics
+CEO: Chief Executive Officer (Directeur Général)
+CFO: Chief Financial Officer (Directeur Financier)
+CPI: Cost Performance Index
+DRH: Directeur des Ressources Humaines
+EPI: Équipements de Protection Individuelle
+ERP: Enterprise Resource Planning
+HSE: Hygiène Sécurité Environnement
+KPI: Key Performance Indicator
+MOA: Maître d'Ouvrage
+MOE: Maître d'Œuvre
+PMP: Project Management Professional (Certification)
+SPI: Schedule Performance Index
+TF: Taux de Fréquence (accidents)
+TG: Taux de Gravité (accidents)
+TP: Travaux Publics
+
+FIN DU GLOSSAIRE — Construction Tunisie ERP

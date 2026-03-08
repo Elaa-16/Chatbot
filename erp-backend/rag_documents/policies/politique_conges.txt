@@ -1,0 +1,76 @@
+
+POLITIQUE DE GESTION DES CONGÉS
+Construction Tunisie ERP — Document RH officiel
+================================================
+Version: 2.0 | Date: Janvier 2026
+
+1. TYPES DE CONGÉS ET DURÉES
+------------------------------
+1.1 Congé annuel payé
+    - Tous les employés permanents ont droit à 35 jours ouvrables de congé annuel.
+    - Les congés non pris ne peuvent pas être reportés à l'année suivante sauf accord écrit du DRH.
+    - Le calcul se fait sur la base de l'année civile (1er janvier au 31 décembre).
+
+1.2 Congé maladie
+    - Durée maximale: 30 jours par an avec maintien du salaire complet.
+    - Au-delà de 3 jours consécutifs, un certificat médical est obligatoire.
+    - Au-delà de 30 jours, le dossier est transmis à la CNSS pour étude.
+
+1.3 Congé de maternité
+    - Durée: 60 jours calendaires (30 jours avant l'accouchement + 30 jours après).
+    - Salaire maintenu à 100% pendant toute la durée.
+    - Extension possible de 15 jours sur présentation d'un certificat médical.
+
+1.4 Congé de paternité
+    - Durée: 3 jours ouvrables à partir de la naissance de l'enfant.
+    - À prendre dans les 15 jours suivant la naissance.
+
+1.5 Congé exceptionnel (événements familiaux)
+    - Mariage de l'employé: 5 jours
+    - Mariage d'un enfant: 2 jours
+    - Décès du conjoint ou d'un enfant: 5 jours
+    - Décès d'un parent (père, mère): 3 jours
+    - Décès d'un beau-parent: 2 jours
+    - Décès d'un frère ou sœur: 1 jour
+    - Circoncision d'un fils: 1 jour
+
+1.6 Congé sans solde
+    - Accordé exceptionnellement pour des raisons personnelles graves.
+    - Durée maximale: 30 jours par an.
+    - Doit être approuvé par le directeur de département et le DRH.
+
+2. PROCÉDURE DE DEMANDE DE CONGÉ
+----------------------------------
+Étape 1: L'employé soumet sa demande via le système ERP (module Congés) au moins:
+    - 15 jours à l'avance pour les congés de 5 jours et plus.
+    - 3 jours à l'avance pour les congés de moins de 5 jours.
+    - Immédiatement pour les congés maladie et événements familiaux.
+
+Étape 2: Le manager direct examine la demande dans un délai de 48 heures.
+    - Il vérifie la disponibilité de l'équipe et l'impact sur les projets en cours.
+    - Il approuve ou rejette la demande avec commentaire obligatoire en cas de rejet.
+
+Étape 3: Le système ERP notifie automatiquement l'employé de la décision.
+
+Étape 4: En cas de désaccord, l'employé peut faire appel auprès du DRH.
+
+3. RÈGLES IMPORTANTES
+----------------------
+- Un employé ne peut pas partir en congé si des tâches critiques lui sont assignées, sauf arrangement préalable.
+- La direction peut rappeler un employé en congé en cas de force majeure (urgence sur chantier, etc.).
+- Toute absence non justifiée dans les 24h est considérée comme absence non autorisée.
+- Trois absences non autorisées consécutives peuvent mener à une procédure disciplinaire.
+
+4. SOLDE DE CONGÉS
+-------------------
+- Consultable à tout moment dans le système ERP (profil employé).
+- Le solde est mis à jour en temps réel après chaque approbation.
+- En fin d'année, le solde non utilisé est perdu (pas de report sauf exception approuvée).
+
+5. CONTACTS RH
+---------------
+- Département RH: rh@construction-tn.com
+- DRH Direct: +216 25 678 901
+- Système ERP: Rubrique "Mes Congés" dans le tableau de bord
+
+DOCUMENT OFFICIEL — Construction Tunisie

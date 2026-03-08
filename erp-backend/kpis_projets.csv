@@ -1,0 +1,31 @@
+kpi_id,project_id,project_name,kpi_date,budget_variance_percentage,schedule_variance_days,quality_score,safety_incidents,client_satisfaction_score,team_productivity_percentage,cost_performance_index,schedule_performance_index,risk_level
+KPI001,P001,Résidence Les Palmiers,2025-01-31,-2.5,-10,92,1,4.5,88,1.03,1.05,Medium
+KPI002,P002,Centre Commercial Carthage,2025-01-31,4.2,15,95,0,4.8,92,0.96,0.95,Low
+KPI003,P003,Hôpital Régional Sfax,2025-01-31,-1.8,5,89,2,4.2,85,1.02,0.98,High
+KPI004,P004,Complexe Sportif Sousse,2025-01-31,3.5,20,87,1,4.0,82,0.97,0.92,Medium
+KPI005,P005,Tour de Bureaux Lac 2,2024-11-30,2.1,0,98,0,5.0,95,0.98,1.00,Low
+KPI006,P006,Villa Privée Gammarth,2025-01-31,-5.2,-5,90,0,4.6,86,1.05,1.02,Low
+KPI007,P007,Usine Agroalimentaire,2025-01-31,1.8,10,91,1,4.3,87,0.98,0.96,Medium
+KPI008,P008,École Primaire Manouba,2025-01-31,-0.5,0,93,0,4.7,90,1.01,1.00,Low
+KPI009,P009,Pont Autoroutier A1,2025-01-31,6.8,30,88,3,3.8,83,0.93,0.90,High
+KPI010,P010,Rénovation Médina Kairouan,2025-01-31,-3.2,-8,94,0,4.9,89,1.03,1.04,Medium
+KPI011,P011,Hôtel 5 Étoiles Djerba,2025-01-31,2.5,12,90,2,4.4,88,0.98,0.94,Medium
+KPI012,P012,Parking Multi-Étages Centre-Ville,2025-01-31,-4.5,-15,91,1,4.5,85,1.05,1.08,Low
+KPI013,P013,Résidence Universitaire,2024-10-31,1.2,5,96,0,4.9,94,0.99,0.97,Low
+KPI014,P014,Entrepôt Logistique Radès,2025-01-31,0.8,8,92,1,4.6,90,0.99,0.95,Low
+KPI015,P015,Centre Culturel Monastir,2025-01-31,-2.0,0,85,0,4.0,78,1.02,1.00,High
+KPI016,P016,Immeuble Résidentiel Nabeul,2025-01-31,1.5,3,93,0,4.7,91,0.99,0.98,Low
+KPI017,P017,Station d'Épuration,2025-01-31,4.2,18,89,2,4.1,86,0.96,0.93,Medium
+KPI018,P018,Complexe Administratif,2025-01-31,-1.2,-5,92,1,4.5,89,1.01,1.02,Medium
+KPI019,P019,Mosquée Communautaire,2025-01-31,0.5,2,94,0,4.8,92,1.00,0.99,Low
+KPI020,P020,Parc Industriel,2025-01-31,5.5,25,87,4,3.9,84,0.95,0.91,High
+KPI021,P001,Résidence Les Palmiers,2024-12-31,-3.1,-12,91,2,4.4,86,1.03,1.06,Medium
+KPI022,P002,Centre Commercial Carthage,2024-12-31,3.8,12,94,0,4.7,91,0.96,0.96,Low
+KPI023,P003,Hôpital Régional Sfax,2024-12-31,-2.5,3,88,3,4.1,83,1.03,0.99,High
+KPI024,P004,Complexe Sportif Sousse,2024-12-31,4.2,22,86,2,3.9,80,0.96,0.91,Medium
+KPI025,P006,Villa Privée Gammarth,2024-12-31,-6.0,-8,89,0,4.5,84,1.06,1.04,Low
+KPI026,P007,Usine Agroalimentaire,2024-12-31,2.2,12,90,1,4.2,86,0.98,0.95,Medium
+KPI027,P008,École Primaire Manouba,2024-12-31,-1.0,2,92,0,4.6,89,1.01,0.99,Low
+KPI028,P009,Pont Autoroutier A1,2024-12-31,7.2,32,87,4,3.7,81,0.93,0.89,High
+KPI029,P010,Rénovation Médina Kairouan,2024-12-31,-4.0,-10,93,0,4.8,88,1.04,1.05,Medium
+KPI030,P011,Hôtel 5 Étoiles Djerba,2024-12-31,3.0,14,89,3,4.3,87,0.97,0.93,Medium

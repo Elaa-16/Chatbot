@@ -1,0 +1,6 @@
+task_id,project_id,assigned_to,title,description,priority,status,due_date,created_by,created_date,estimated_hours,actual_hours
+T001,P001,E007,Réviser les plans architecturaux,Vérifier conformité des plans avec normes tunisiennes,High,In Progress,2026-02-20,E003,2026-02-10,8,5
+T002,P003,E011,Commander équipements médicaux,Finaliser commande scanners et IRM,Critical,Todo,2026-02-18,E010,2026-02-15,4,
+T003,P001,E007,Inspection chantier,Contrôle qualité béton,Medium,Done,2026-02-14,E003,2026-02-12,3,3
+T004,P005,E008,Rapport final,Préparer rapport de livraison projet,High,In Progress,2026-02-17,E003,2026-02-14,6,4
+T005,P003,E012,Réunion sécurité,Organiser briefing sécurité chantier,Critical,Todo,2026-02-16,E010,2026-02-15,2,

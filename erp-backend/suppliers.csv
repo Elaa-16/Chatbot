@@ -1,0 +1,6 @@
+supplier_id,supplier_name,contact_person,email,phone,address,city,country,category,rating,status,created_date,notes
+S001,Ciments de Tunisie,Ahmed Kacem,contact@ciments.tn,+216 71 234 567,Zone Industrielle,Tunis,Tunisia,Materials,5,Active,2024-01-10,Fournisseur principal ciment
+S002,Matériaux Pro,Fatma Ben Ali,f.benali@matpro.tn,+216 71 345 678,Avenue Habib Bourguiba,Sfax,Tunisia,Materials,4,Active,2024-01-15,Matériaux construction
+S003,Équipement TP,Karim Jebali,k.jebali@equiptp.tn,+216 71 456 789,Route de Bizerte,Tunis,Tunisia,Equipment,5,Active,2024-02-01,Location engins
+S004,Électricité Moderne,Leila Mansour,contact@elecmod.tn,+216 71 567 890,Mégrine,Tunis,Tunisia,Services,4,Active,2024-02-10,Installation électrique
+S005,Plomberie Services,Mohamed Trabelsi,m.trabelsi@plomberie.tn,+216 74 678 901,Centre Ville,Sousse,Tunisia,Services,3,Active,2024-03-01,Travaux plomberie

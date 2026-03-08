@@ -1,0 +1,7 @@
+equipment_id,name,category,serial_number,status,current_project_id,assigned_to,location,purchase_date,purchase_value,last_maintenance,next_maintenance,notes
+EQ001,Grue Mobile 50T,Machinery,GR-2024-001,In Use,P003,E011,Sfax,2023-05-10,450000,2026-01-15,2026-04-15,Grue principale chantier
+EQ002,Bulldozer Caterpillar,Machinery,BD-2023-012,Available,,,Tunis,2023-08-20,380000,2026-02-01,2026-05-01,
+EQ003,Camion Benne 20T,Vehicle,CB-2024-003,In Use,P001,E007,Tunis,2024-01-15,95000,2026-01-20,2026-04-20,
+EQ004,Bétonnière Mobile,Machinery,BT-2023-008,Maintenance,,,Atelier Central,2023-11-10,45000,2026-02-10,2026-03-10,Réparation pompe
+EQ005,Échafaudages (Set 50),Tool,ECH-2022-015,In Use,P002,E008,La Marsa,2022-06-01,12000,2025-12-15,2026-03-15,
+EQ006,Foreuse Hydraulique,Machinery,FOR-2024-002,Available,,,Tunis,2024-02-01,125000,2026-02-05,2026-05-05,

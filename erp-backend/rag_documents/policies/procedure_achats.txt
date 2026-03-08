@@ -1,0 +1,70 @@
+
+PROCÉDURE DE GESTION DES ACHATS ET FOURNISSEURS
+Construction Tunisie ERP — Document Finance officiel
+=====================================================
+Version: 1.8 | Date: Janvier 2026
+
+1. PROCESSUS D'ACHAT
+---------------------
+1.1 Seuils d'approbation
+    - Moins de 1,000 EUR: Chef de chantier peut approuver directement
+    - 1,000 à 10,000 EUR: Chef de projet doit approuver
+    - 10,000 à 50,000 EUR: Directeur Financier doit approuver
+    - Plus de 50,000 EUR: CEO doit approuver
+
+1.2 Processus standard
+    Étape 1: Expression du besoin via le système ERP (bon de commande)
+    Étape 2: Sélection du fournisseur (priorité aux fournisseurs référencés)
+    Étape 3: Demande de devis (minimum 3 devis pour > 5,000 EUR)
+    Étape 4: Validation selon seuils ci-dessus
+    Étape 5: Émission du bon de commande officiel via ERP
+    Étape 6: Réception et contrôle qualité
+    Étape 7: Validation de la facture et paiement
+
+2. FOURNISSEURS RÉFÉRENCÉS (ACTIFS)
+-------------------------------------
+Liste des fournisseurs approuvés dans le système ERP:
+
+S001 — Ciments de Tunisie (Matériaux) | Tunis | Note: 5/5
+    Contact: Ahmed Kacem | contact@ciments.tn | +216 71 234 567
+    Spécialité: Fournisseur principal de ciment et béton
+    
+S002 — Matériaux Pro (Matériaux) | Sfax | Note: 4/5
+    Contact: Fatma Ben Ali | f.benali@matpro.tn | +216 71 345 678
+    Spécialité: Matériaux de construction généraux
+    
+S003 — Équipement TP (Équipement) | Tunis | Note: 5/5
+    Contact: Karim Jebali | k.jebali@equiptp.tn | +216 71 456 789
+    Spécialité: Location et vente d'engins de chantier
+    
+S004 — Électricité Moderne (Services) | Tunis | Note: 4/5
+    Contact: Leila Mansour | contact@elecmod.tn | +216 71 567 890
+    Spécialité: Installation électrique industrielle et tertiaire
+    
+S005 — Plomberie Services (Services) | Sousse | Note: 3/5
+    Contact: Mohamed Trabelsi | m.trabelsi@plomberie.tn | +216 74 678 901
+    Spécialité: Travaux de plomberie et sanitaire
+
+3. RÉFÉRENCEMENT D'UN NOUVEAU FOURNISSEUR
+-------------------------------------------
+Pour ajouter un fournisseur dans le système:
+    1. Remplir le formulaire de référencement (disponible sur ERP)
+    2. Fournir: extrait de registre du commerce + attestation fiscale + références clients
+    3. Validation par le service Achats dans les 5 jours ouvrables
+    4. Visite de qualification pour les fournisseurs > 100,000 EUR/an
+
+4. DÉLAIS DE PAIEMENT
+----------------------
+- Fournisseurs locaux: 30 jours fin de mois
+- Fournisseurs internationaux: 45 jours
+- Pénalités de retard de paiement: 8% annuel
+- Escompte pour paiement comptant: négocié au cas par cas
+
+5. GESTION DES LITIGES FOURNISSEURS
+-------------------------------------
+- Tout litige est signalé dans le système ERP (module Issues, catégorie "Autre")
+- Le service Achats a 5 jours pour répondre
+- Les litiges non résolus sont escaladés au CFO
+
+DOCUMENT OFFICIEL — Construction Tunisie
+Service Achats: achats@construction-tn.com

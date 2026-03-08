@@ -1,0 +1,79 @@
+
+RÈGLEMENT INTÉRIEUR
+Construction Tunisie — Document RH officiel
+============================================
+Version: 2.5 | Date: Janvier 2026
+
+1. HORAIRES DE TRAVAIL
+-----------------------
+1.1 Horaires standard (bureaux et siège)
+    - Lundi au vendredi: 08h00 – 17h00
+    - Pause déjeuner: 12h30 – 13h30
+    - Durée hebdomadaire: 40 heures
+
+1.2 Horaires chantier
+    - Lundi au samedi: 07h00 – 16h00
+    - Pause: 12h00 – 13h00
+    - Les heures supplémentaires sont payées à 125% (jours ouvrables) et 150% (vendredi/samedi)
+    - Travail le dimanche: 175% du taux horaire normal
+
+1.3 Pointage
+    - L'enregistrement des heures se fait via le système ERP (timesheets)
+    - Toute heure non enregistrée dans les 48h est perdue
+    - Les chefs de chantier valident les heures de leur équipe chaque semaine
+
+2. CODE VESTIMENTAIRE ET COMPORTEMENT
+--------------------------------------
+2.1 Tenue professionnelle
+    - Tenue soignée et propre obligatoire pour tout le personnel
+    - EPI obligatoires sur les chantiers (voir politique sécurité)
+    - Le port de la tenue de travail fournie par l'entreprise est obligatoire sur chantier
+
+2.2 Comportement professionnel
+    - Respect mutuel entre tous les employés, sans discrimination
+    - Comportement respectueux envers les clients et visiteurs
+    - Toute forme de harcèlement (moral ou sexuel) est strictement interdite
+    - L'utilisation du téléphone personnel est limitée aux pauses
+
+3. UTILISATION DES RESSOURCES DE L'ENTREPRISE
+-----------------------------------------------
+3.1 Véhicules et équipements
+    - Les véhicules de service ne peuvent être utilisés qu'à des fins professionnelles
+    - Tout dommage doit être signalé immédiatement
+    - Le système ERP trace toutes les affectations d'équipements
+
+3.2 Système informatique et ERP
+    - Chaque employé a un compte personnel et confidentiel
+    - Partager ses identifiants est strictement interdit
+    - L'accès aux données est limité selon le rôle (employé / manager / CEO)
+    - Toute tentative d'accès non autorisé est un motif de licenciement
+
+3.3 Téléphone et communication
+    - La messagerie professionnelle doit être consultée chaque jour ouvrable
+    - Les e-mails professionnels sont propriété de l'entreprise
+
+4. ÉVALUATION ET PERFORMANCE
+------------------------------
+- Évaluation annuelle de performance en décembre
+- Entretien mi-parcours en juin
+- Les objectifs sont définis en début d'année avec le manager
+- Les KPIs de chaque projet impactent l'évaluation des chefs de projet
+
+5. PROCÉDURE DISCIPLINAIRE
+----------------------------
+Niveaux de sanctions:
+  Niveau 1 — Avertissement écrit: retard répété, absence non justifiée courte durée
+  Niveau 2 — Blâme: faute professionnelle légère, manquement aux règles de sécurité
+  Niveau 3 — Mise à pied (1-5 jours sans solde): faute grave
+  Niveau 4 — Licenciement pour faute grave: vol, fraude, harcèlement, mise en danger d'autrui
+
+6. AVANTAGES SOCIAUX
+---------------------
+- Mutuelle santé: prise en charge à 70% par l'entreprise
+- Transport: indemnité mensuelle selon la distance domicile-travail
+- Panier repas: 8 EUR/jour pour le personnel sur chantier
+- Prime de fin d'année: équivalent à 1 mois de salaire (selon performance)
+- Prime de chantier: 200 EUR/mois pour le personnel affecté sur chantier à plein temps
+
+DOCUMENT OFFICIEL — Construction Tunisie
+DRH: rh@construction-tn.com | Tel: +216 25 678 901

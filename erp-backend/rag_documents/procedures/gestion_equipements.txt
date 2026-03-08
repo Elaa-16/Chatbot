@@ -1,0 +1,118 @@
+
+PROCÉDURE DE GESTION DES ÉQUIPEMENTS ET ENGINS
+Construction Tunisie ERP — Document Technique
+================================================
+Version: 2.0 | Date: Janvier 2026
+
+1. INVENTAIRE DES ÉQUIPEMENTS ACTUELS
+---------------------------------------
+Le parc d'équipements de la société comprend les éléments suivants:
+
+  EQ001 — Grue Mobile 50T
+    Catégorie: Machinery
+    Numéro de série: GR-2024-001
+    Statut actuel: In Use
+    Localisation: Sfax
+    Valeur d'achat: 450,000 EUR
+    Dernière maintenance: 2026-01-15
+    Prochaine maintenance: 2026-04-15
+    Affectation: Projet P003
+    Notes: Grue principale chantier
+
+  EQ002 — Bulldozer Caterpillar
+    Catégorie: Machinery
+    Numéro de série: BD-2023-012
+    Statut actuel: Available
+    Localisation: Tunis
+    Valeur d'achat: 380,000 EUR
+    Dernière maintenance: 2026-02-01
+    Prochaine maintenance: 2026-05-01
+    Affectation: Non affecté
+    Notes: None
+
+  EQ003 — Camion Benne 20T
+    Catégorie: Vehicle
+    Numéro de série: CB-2024-003
+    Statut actuel: In Use
+    Localisation: Tunis
+    Valeur d'achat: 95,000 EUR
+    Dernière maintenance: 2026-01-20
+    Prochaine maintenance: 2026-04-20
+    Affectation: Projet P001
+    Notes: None
+
+  EQ004 — Bétonnière Mobile
+    Catégorie: Machinery
+    Numéro de série: BT-2023-008
+    Statut actuel: Maintenance
+    Localisation: Atelier Central
+    Valeur d'achat: 45,000 EUR
+    Dernière maintenance: 2026-02-10
+    Prochaine maintenance: 2026-03-10
+    Affectation: Non affecté
+    Notes: Réparation pompe
+
+  EQ005 — Échafaudages (Set 50)
+    Catégorie: Tool
+    Numéro de série: ECH-2022-015
+    Statut actuel: In Use
+    Localisation: La Marsa
+    Valeur d'achat: 12,000 EUR
+    Dernière maintenance: 2025-12-15
+    Prochaine maintenance: 2026-03-15
+    Affectation: Projet P002
+    Notes: None
+
+  EQ006 — Foreuse Hydraulique
+    Catégorie: Machinery
+    Numéro de série: FOR-2024-002
+    Statut actuel: Available
+    Localisation: Tunis
+    Valeur d'achat: 125,000 EUR
+    Dernière maintenance: 2026-02-05
+    Prochaine maintenance: 2026-05-05
+    Affectation: Non affecté
+    Notes: None
+
+
+2. STATUTS DES ÉQUIPEMENTS
+----------------------------
+- "Available" (Disponible): L'équipement est prêt et peut être affecté à un projet
+- "In Use" (En cours d'utilisation): L'équipement est affecté à un chantier actif
+- "Maintenance" (En maintenance): L'équipement est en révision ou réparation
+
+3. PROCÉDURE D'AFFECTATION
+----------------------------
+Étape 1: Chef de projet fait une demande dans l'ERP (module Équipements)
+Étape 2: Vérification de la disponibilité en temps réel dans le système
+Étape 3: Approbation du Responsable du parc matériel
+Étape 4: Affectation enregistrée dans l'ERP avec date de début
+Étape 5: Inspection de l'équipement par le chef de chantier avant utilisation
+Étape 6: Rapport d'utilisation quotidien obligatoire pour engins > 100,000 EUR
+
+4. PLAN DE MAINTENANCE PRÉVENTIVE
+------------------------------------
+- Maintenance légère: tous les 3 mois (vérification niveaux, graissage)
+- Maintenance complète: tous les 6 mois (révision générale)
+- Contrôle technique: annuel (conformité réglementaire)
+- Tout équipement dont la prochaine maintenance est dépassée est automatiquement
+  mis en statut "Maintenance" dans le système ERP
+
+5. PROCÉDURE EN CAS DE PANNE
+------------------------------
+Étape 1: Le conducteur signale la panne immédiatement au chef de chantier
+Étape 2: Créer un incident dans le système ERP (catégorie "Technical")
+Étape 3: L'équipement est mis en statut "Maintenance" dans l'ERP
+Étape 4: Contacter le fournisseur S003 (Équipement TP) pour les engins lourds
+Étape 5: Estimer le délai de réparation et informer le chef de projet
+Étape 6: Si délai > 3 jours, chercher un équipement de remplacement disponible
+
+6. RÈGLES D'UTILISATION
+------------------------
+- Seuls les opérateurs certifiés peuvent conduire les engins lourds
+- Interdiction formelle d'utiliser les équipements de l'entreprise à des fins personnelles
+- Toute dégradation causée par négligence peut être imputée à l'employé responsable
+- Le carnet de bord de chaque engin doit être rempli quotidiennement
+
+DOCUMENT TECHNIQUE — Construction Tunisie
+Responsable Parc Matériel: materiels@construction-tn.com

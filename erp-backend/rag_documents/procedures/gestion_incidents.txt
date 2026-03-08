@@ -1,0 +1,63 @@
+
+PROCÉDURE DE GESTION DES INCIDENTS ET PROBLÈMES
+Construction Tunisie ERP — Document Qualité
+==============================================
+Version: 1.5 | Date: Janvier 2026
+
+1. DÉFINITION ET CATÉGORIES D'INCIDENTS
+-----------------------------------------
+Un incident est tout événement non planifié qui affecte ou pourrait affecter
+la qualité, le délai, le budget ou la sécurité d'un projet.
+
+Catégories dans le système ERP:
+  - Safety (Sécurité): accidents, quasi-accidents, conditions dangereuses
+  - Quality (Qualité): non-conformités, défauts de construction, rebus
+  - Delay (Retard): événements causant des retards sur le planning
+  - Budget (Budget): dépassements de coûts non prévus
+  - Technical (Technique): pannes, problèmes techniques, défaillances
+  - Other (Autre): tout incident ne rentrant pas dans les catégories ci-dessus
+
+Niveaux de sévérité:
+  - Low (Faible): impact mineur, résolution locale possible
+  - Medium (Moyen): impact modéré, nécessite l'attention du chef de projet
+  - High (Élevé): impact significatif, nécessite escalade au management
+  - Critical (Critique): impact majeur sur la sécurité ou la viabilité du projet
+
+2. PROCÉDURE DE DÉCLARATION
+-----------------------------
+Tout employé ayant connaissance d'un incident DOIT le déclarer dans l'ERP.
+La non-déclaration d'un incident est considérée comme une faute professionnelle.
+
+Étape 1: Aller dans l'ERP → Module "Issues/Incidents"
+Étape 2: Créer un nouvel incident avec:
+  - Titre clair et descriptif
+  - Projet concerné
+  - Catégorie et sévérité
+  - Description détaillée (qui, quoi, quand, où, comment)
+  - Attachement de photos si possible
+
+Étape 3: Le système notifie automatiquement le chef de projet
+Étape 4: Pour les incidents Critical/High → notification immédiate au CEO
+
+3. DÉLAIS DE RÉSOLUTION CIBLES
+--------------------------------
+  - Critical: résolution ou plan d'action sous 24 heures
+  - High: résolution sous 72 heures
+  - Medium: résolution sous 7 jours
+  - Low: résolution sous 30 jours
+
+4. SUIVI ET CLÔTURE
+---------------------
+- Tout incident ouvert fait l'objet d'un suivi hebdomadaire en réunion de projet
+- La clôture d'un incident nécessite une note de résolution dans l'ERP
+- Les incidents Critical font l'objet d'une analyse des causes racines (Root Cause Analysis)
+- Un rapport mensuel des incidents est généré automatiquement par l'ERP
+
+5. ANALYSE ET AMÉLIORATION CONTINUE
+-------------------------------------
+- Les données d'incidents sont analysées trimestriellement
+- Les projets avec plus de 3 incidents High/Critical en un mois déclenchent un audit
+- Les leçons apprises sont partagées avec toutes les équipes
+
+DOCUMENT QUALITÉ — Construction Tunisie
+Responsable Qualité: qualite@construction-tn.com

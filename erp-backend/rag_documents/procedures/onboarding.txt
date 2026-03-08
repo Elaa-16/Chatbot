@@ -1,0 +1,70 @@
+
+PROCÉDURE D'INTÉGRATION DES NOUVEAUX EMPLOYÉS (ONBOARDING)
+Construction Tunisie ERP — Document RH
+===========================================================
+Version: 1.3 | Date: Janvier 2026
+
+1. AVANT L'ARRIVÉE (J-7)
+--------------------------
+- Création du compte ERP par le service informatique
+- Préparation du badge et des accès chantier
+- Attribution d'un mentor (employé expérimenté du même département)
+- Envoi du livret d'accueil par email
+
+2. PREMIER JOUR (J0)
+---------------------
+Matin:
+  08h00 — Accueil par le DRH et signature du contrat
+  09h00 — Remise du badge, EPI, matériel informatique
+  10h00 — Visite des locaux et présentation aux équipes
+  11h00 — Formation ERP (création compte, navigation de base)
+
+Après-midi:
+  13h30 — Réunion avec le manager direct
+  14h30 — Formation Sécurité obligatoire (2 heures)
+  16h30 — Questions/Réponses avec le mentor
+
+3. PREMIÈRE SEMAINE (J1-J7)
+-----------------------------
+- Formation approfondie sur le système ERP (2 jours)
+- Visite des chantiers actifs avec un chef de projet
+- Lecture des documents politiques (remis physiquement et accessibles sur ERP)
+- Rencontre avec les fournisseurs principaux si pertinent
+- Participation aux réunions d'équipe en mode observateur
+
+4. PREMIER MOIS (J8-J30)
+--------------------------
+- Prise en main progressive des responsabilités
+- Réunion hebdomadaire avec le mentor
+- Accès complet au système ERP selon le rôle défini
+- Point de suivi à J30 avec le manager et le DRH
+
+5. PÉRIODE D'ESSAI (3-6 mois selon contrat)
+---------------------------------------------
+- Évaluation à mi-parcours (J45)
+- Évaluation finale avant titularisation
+- Rapport du manager transmis au DRH
+
+6. ACCÈS SYSTÈME ERP PAR RÔLE
+--------------------------------
+  Rôle "employee":
+    - Voir ses propres tâches assignées
+    - Soumettre des demandes de congé
+    - Enregistrer ses heures de travail
+    - Consulter ses propres KPIs et données
+
+  Rôle "manager":
+    - Tout ce que peut faire un employé
+    - Voir et gérer les tâches de son équipe
+    - Approuver/Rejeter les demandes de congé de ses collaborateurs
+    - Accès aux KPIs de ses projets
+    - Créer et assigner des tâches
+
+  Rôle "ceo":
+    - Accès complet à toutes les données
+    - Tableaux de bord globaux
+    - KPIs de tous les projets
+    - Données financières complètes
+
+DOCUMENT RH — Construction Tunisie
+DRH: rh@construction-tn.com
