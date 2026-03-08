@@ -1,0 +1,15 @@
+# Create .gitignore
+@"
+__pycache__/
+*.pyc
+.env
+*.db
+*.sqlite
+erp_chroma_db/
+node_modules/
+.vscode/
+"@ | Out-File -Encoding utf8 .gitignore
+
+git add .gitignore
+git commit -m "add .gitignore"
+git push
