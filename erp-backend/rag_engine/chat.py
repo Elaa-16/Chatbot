@@ -1,19 +1,6 @@
 """
 Construction ERP RAG Engine v27
 ================================
-Changements v26→v27:
-  - FIX 1 : _is_cross_emp_leave — exige présence simultanée de mots "critiques"
-             ET "congé/absent" pour déclencher le cross-query
-  - FIX 2 : _answer_useless — détecte tout label LLM absent du live_context
-  - FIX 3 : Filtre Python status != Done quand "non termin" dans la question
-             + règle planner pour ne pas forcer status=Todo sur critiques non terminées
-  - FIX 4 : Planner SECURITE — assigned_to=user_id interdit pour role=manager
-  - FIX 4b: Post-plan guard — retire assigned_to/employee_id=user_id injecté par erreur
-  - FIX 5 : _PROCEDURAL_PATTERNS enrichi (comment soumettre, déposer, demander, etc.)
-  - FIX 6 : is_procedural_question — exclut les questions à intention "data"
-             (statut de ma demande, mon statut, ma demande, etc.) → API live
-             + règle planner pour "statut de ma demande de congé"
-  - Tous les fixes v26 conservés
 """
 
 import logging
