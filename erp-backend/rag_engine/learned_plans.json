@@ -1,0 +1,1223 @@
+{
+  "_comment": "From ERP Questions PDF — endpoint plans. Knowledge/procedures stay in RAG (rag_documents). Use \"{user_id}\" for current user (mon equipe, mes taches). Updated to cover all 101 questions from erp_questions_by_role.docx.",
+  "plans": [
+    {
+      "questions": [
+        "liste de tous les employes",
+        "liste des employes",
+        "tous les employes",
+        "liste complète de tous les employés",
+        "liste complete des employes",
+        "lister les employees",
+        "lister les employés",
+        "lister les employes",
+        "affiche les employes",
+        "montre les employes",
+        "donne moi la liste des employes",
+        "101. lister les employés",
+        "lister les employes"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes en conge en ce moment",
+        "quels employes sont en conge en ce moment",
+        "qui est en conge maintenant",
+        "qui est absent aujourd'hui",
+        "quels employes sont en conge",
+        "employes absents",
+        "quels employes sont en conge en ce moment",
+        "employes en conge aujourd'hui"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Approved",
+            "active_today": true
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "conges en attente de validation",
+        "demandes de conge en attente",
+        "quels employes ont des conges en attente",
+        "conges en attente",
+        "demandes en attente de validation",
+        "quels employes ont des demandes de conge en attente d'approbation",
+        "demandes de conge en attente d'approbation",
+        "quelles demandes de conge sont en attente de validation",
+        "quels employes ont des conges en attente de validation"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Pending"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien de jours de conge a pris",
+        "jours de conge a pris",
+        "bilan conge",
+        "nombre de jours de conge",
+        "combien de jours de conge a pris nadia hamdi",
+        "combien de jours de conge a pris ahmed trabelsi",
+        "combien de jours de conge a pris nadia hamdi cette annee",
+        "combien de jours de conge a pris ahmed trabelsi cette annee"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "affiche le profil complet",
+        "profil complet de",
+        "affiche le profil de",
+        "profil de",
+        "affiche le profil complet de karim jebali",
+        "affiche le profil de karim jebali"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {}
+        },
+        {
+          "endpoint": "/leave-requests",
+          "filters": {}
+        },
+        {
+          "endpoint": "/tasks",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement finance",
+        "quels employes sont du departement finance",
+        "employes finance",
+        "quels employes sont dans le departement finance"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "Finance"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement projets",
+        "quels employes sont du departement projets",
+        "employes projets",
+        "employes dans le departement projets",
+        "quels employes sont dans le departement projets"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "Projects"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement operations",
+        "employes operations"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "Operations"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement rh",
+        "employes ressources humaines",
+        "employes rh"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "Human Resources"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement it",
+        "employes informatique",
+        "employes it"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "IT"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes du departement executive",
+        "employes direction",
+        "employes executive"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "department": "Executive"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes ont le role manager",
+        "quels employes ont le role manager",
+        "liste des managers"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quel manager a le plus de taches bloquees",
+        "manager a le plus de taches bloquees",
+        "managers qui ont le plus de taches bloquees",
+        "montre-moi les managers qui ont le plus de taches bloquees",
+        "montre moi les managers qui ont le plus de taches bloquees dans leurs equipes",
+        "classement des managers par performance",
+        "performance des managers",
+        "quel manager a le plus de taches critiques ouvertes",
+        "manager meilleur taux de completion",
+        "manager supervise le plus de projets en retard",
+        "donne-moi un classement des managers par performance",
+        "quel manager a le meilleur taux de completion de taches",
+        "quel manager supervise le plus de projets en retard"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks/by-manager",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "statistiques managers",
+        "classement managers",
+        "stats par manager"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/stats/by-manager",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quels managers ont des taches bloquees et des projets en retard",
+        "managers taches bloquees et projets en retard",
+        "managers avec taches bloquees et projets en retard"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks/by-manager",
+          "filters": {}
+        },
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "delayed": true
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien de projets sont en cours",
+        "projets en cours",
+        "quels projets sont en cours"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {
+            "status": "In Progress"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets sont termines",
+        "projets termines",
+        "quels projets sont termines"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {
+            "status": "Completed"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets en phase de planification",
+        "projets en planification",
+        "quels projets sont en phase de planification"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {
+            "status": "Planning"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "meilleur avancement",
+        "projet a le meilleur avancement",
+        "liste tous les projets avec leur budget et avancement",
+        "tous les projets avec budget et avancement",
+        "liste tous les projets avec leur budget et avancement"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "liste de mes clients",
+        "lister mes clients",
+        "mes clients",
+        "liste clients",
+        "tous les clients",
+        "quels sont mes clients",
+        "lister mes clients"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quels projets sont en retard",
+        "projets en retard",
+        "liste des projets en retard",
+        "combien de projets sont actuellement en retard",
+        "combien de projets sont actuellement en retard et lesquels ont le risque le plus critique",
+        "projets en retard et risque critique"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "delayed": true
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets depassent leur budget",
+        "projets qui depassent le budget",
+        "depassement budget",
+        "qui depassent le cout prevu",
+        "quel est l'etat du budget de tous les projets en cours",
+        "etat du budget de tous les projets",
+        "y en a-t-il qui depassent leur cout prevu"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets a risque eleve",
+        "projets a risque",
+        "risque eleve",
+        "quels projets sont a risque eleve",
+        "quels projets depassent le budget et ont un risque eleve",
+        "projets depassent le budget et risque eleve"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "risk_level": "High"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "etat du budget",
+        "budget de tous les projets",
+        "depassent leur cout prevu",
+        "depassent le cout prevu",
+        "y en a-t-il qui depassent",
+        "budget des projets en cours",
+        "etat du budget des projets",
+        "pire cpi et pire spi",
+        "projet avec le pire cpi",
+        "spi inferieur a 0.8",
+        "projets spi inferieur",
+        "quel est le projet avec le pire cpi et le pire spi en meme temps",
+        "quels projets ont un spi inferieur a 0.8"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "statistiques globales de l'entreprise",
+        "statistiques globales",
+        "donne-moi les statistiques globales",
+        "resume entreprise"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/stats/summary",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents critiques ouverts",
+        "quels incidents critiques sont ouverts",
+        "incidents critiques en ce moment"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "severity": "Critical",
+            "status": "Open"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents de securite",
+        "incidents securite chantiers",
+        "combien d'incidents de securite",
+        "incidents categorie safety",
+        "y a-t-il des incidents de categorie safety ouverts",
+        "incidents de securite ouverts",
+        "incidents safety ouverts",
+        "combien d'incidents de securite y a-t-il sur les chantiers"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "category": "Safety",
+            "status": "Open"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets ont des incidents non resolus",
+        "incidents non resolus"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "status": "Open"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents severite high ou critical",
+        "incidents de severite high",
+        "quels incidents sont de severite",
+        "quels incidents sont de severite high ou critical"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets en retard et ont des incidents",
+        "projets en retard et incidents critical",
+        "analyses croisees retard incidents",
+        "quels projets sont en retard et ont des incidents critical ou high"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "delayed": true
+          }
+        },
+        {
+          "endpoint": "/issues",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "employes ont des taches critiques et sont en conge",
+        "taches critiques assignees et conge approuve",
+        "employes en conge dont taches critiques non reassignees",
+        "quels employes ont des taches critiques assignees et sont en conge approuve",
+        "y a-t-il des employes en conge dont les taches critiques ne sont pas reassignees"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "priority": "Critical"
+          }
+        },
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Approved"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "liste des fournisseurs actifs",
+        "fournisseurs actifs",
+        "liste des fournisseurs"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/suppliers",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "equipements en maintenance",
+        "quels equipements sont en maintenance"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/equipment",
+          "filters": {
+            "status": "Maintenance"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "equipements disponibles",
+        "quels equipements sont disponibles"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/equipment",
+          "filters": {
+            "status": "Available"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "fournisseurs ont la meilleure note",
+        "meilleure note fournisseurs"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/suppliers",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches critiques encore a faire",
+        "taches critiques non terminees",
+        "quelles taches critiques sont encore a faire",
+        "taches critiques a faire"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "priority": "Critical"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien de taches sont bloquees",
+        "taches bloquees au total",
+        "statistiques globales des taches",
+        "statistiques globales des taches"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/stats/tasks",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches en retard sur leur echeance",
+        "taches en retard",
+        "quelles taches sont en retard sur leur echeance"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "liste des membres de mon equipe",
+        "membres de mon equipe",
+        "qui sont les membres de mon equipe",
+        "liste de mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/employees",
+          "filters": {
+            "supervised_by": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "membres de mon equipe sont en conge",
+        "conges de mon equipe",
+        "quels membres de mon equipe sont en conge"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "supervised_by": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quels membres de mon equipe sont en conge aujourd'hui",
+        "membres de mon equipe en conge aujourd'hui",
+        "membres de mon equipe absents aujourd'hui"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Approved",
+            "active_today": true,
+            "supervised_by": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "demandes de conge en attente de validation",
+        "demandes de conge en attente",
+        "quelles demandes de conge sont en attente de validation"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Pending"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches de mon equipe sont bloquees",
+        "taches bloquees mon equipe",
+        "quelles taches de mon equipe sont bloquees"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "supervised_by": "{user_id}",
+            "status": "Blocked"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches critiques encore a faire mon equipe",
+        "taches critiques a faire mon equipe",
+        "quelles sont les taches critiques non terminees sur mes projets",
+        "taches critiques non terminees sur mes projets"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "supervised_by": "{user_id}",
+            "priority": "Critical"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches en cours dans mon equipe",
+        "taches de mon equipe en cours",
+        "quelles taches sont en cours dans mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "supervised_by": "{user_id}",
+            "status": "In Progress"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien de taches sont en retard",
+        "taches en retard sur leur echeance",
+        "statistiques des taches de mon equipe",
+        "quelles taches sont en retard sur leur echeance"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "supervised_by": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mes projets en cours",
+        "quels sont mes projets en cours",
+        "projets en cours de mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {
+            "status": "In Progress"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projet de mon equipe a le moins d'avancement",
+        "moins d'avancement mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets de mon equipe sont termines",
+        "mes projets termines"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {
+            "status": "Completed"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "tous mes projets avec leur statut",
+        "liste de tous mes projets",
+        "mes projets avec leur statut"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/projects",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets de mon equipe sont en retard",
+        "mes projets en retard"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "delayed": true
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets depassent le budget mon equipe",
+        "depassement budget mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "meilleur cpi dans mon equipe",
+        "projet a le meilleur cpi mon equipe"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents ouverts sur mes projets",
+        "quels incidents sont ouverts sur mes projets",
+        "incidents sur mes projets"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "status": "Open"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents critiques sur mes chantiers",
+        "y a-t-il des incidents critiques sur mes chantiers"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "severity": "Critical"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "incidents de securite non resolus",
+        "incidents securite non resolus"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/issues",
+          "filters": {
+            "category": "Safety",
+            "status": "Open"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "feuilles de temps de mon equipe",
+        "affiche les feuilles de temps de mon equipe",
+        "timesheets mon equipe",
+        "affiche les feuilles de temps de mon equipe ce mois"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/timesheets",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien d'heures a travaille",
+        "heures a travaille cette semaine",
+        "employe a le plus d'heures",
+        "quel employe a le plus d'heures enregistrees sur le projet",
+        "combien d'heures a travaille ahmed trabelsi cette semaine"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/timesheets",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "conges refuses ce mois",
+        "quels conges ont ete refuses",
+        "conges refuses"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Rejected"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "tous les conges approuves de l'annee",
+        "liste des conges approuves",
+        "conges approuves de l'annee"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Approved"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "qui a le plus de jours de conge approuves",
+        "plus de jours de conge approuves"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "status": "Approved"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "demandes de conge urgentes",
+        "conge urgent emergency",
+        "demandes de conge emergency en cours",
+        "y a-t-il des demandes de conge urgentes emergency en cours"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quelles sont mes taches en cours",
+        "mes taches en cours",
+        "taches en cours"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "assigned_to": "{user_id}",
+            "status": "In Progress"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mes taches critiques",
+        "quelles sont mes taches critiques"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "assigned_to": "{user_id}",
+            "priority": "Critical"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "taches me sont assignees et bloquees",
+        "mes taches bloquees",
+        "taches assignees bloquees",
+        "quelles sont mes taches bloquees"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "assigned_to": "{user_id}",
+            "status": "Blocked"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "ma prochaine tache a faire",
+        "prochaine tache a faire",
+        "prochaine tache"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/tasks",
+          "filters": {
+            "assigned_to": "{user_id}",
+            "status": "Todo"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien de jours de conge me restent",
+        "jours de conge me restent",
+        "reste de conge"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "statut de ma derniere demande de conge",
+        "statut de ma demande de conge",
+        "ma demande de conge",
+        "quel est le statut de ma demande",
+        "quel est le statut de ma demande de conge"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mes conges de cette annee",
+        "liste de mes conges",
+        "mes conges cette annee"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mes demandes de conge en attente",
+        "demandes de conge en attente",
+        "quelles demandes de conge sont en attente de validation"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/leave-requests",
+          "filters": {
+            "employee_id": "{user_id}",
+            "status": "Pending"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "combien d'heures ai-je travaille ce mois",
+        "mes heures ce mois",
+        "heures travaillees ce mois"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/timesheets",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mes feuilles de temps sur le projet",
+        "affiche mes feuilles de temps",
+        "mes timesheets"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/timesheets",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "mon total d'heures cette semaine",
+        "total d'heures cette semaine"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/timesheets",
+          "filters": {
+            "employee_id": "{user_id}"
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "avancement des projets sur lesquels je travaille",
+        "projets sur lesquels je travaille",
+        "mon avancement projets"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {}
+        }
+      ]
+    },
+    {
+      "questions": [
+        "projets en retard dans mon perimetre",
+        "y a-t-il des projets en retard dans mon perimetre"
+      ],
+      "endpoints": [
+        {
+          "endpoint": "/kpis",
+          "filters": {
+            "delayed": true
+          }
+        }
+      ]
+    },
+    {
+      "questions": [
+        "quelle est la politique de conge maladie",
+        "combien de jours de conge maladie maximum",
+        "politique de conge maladie combien de jours maximum",
+        "politique conge maladie"
+      ],
+      "endpoints": []
+    },
+    {
+      "questions": [
+        "comment soumettre une demande de conge",
+        "comment deposer une demande de conge",
+        "quelle est la procedure pour demander un conge",
+        "procedure demande de conge",
+        "comment soumettre une demande de conge quelle est la procedure"
+      ],
+      "endpoints": []
+    },
+    {
+      "questions": [
+        "c'est quoi cpi",
+        "cest quoi cpi",
+        "qu'est-ce que cpi",
+        "definition cpi",
+        "que veut dire cpi"
+      ],
+      "endpoints": []
+    }
+  ]
+}

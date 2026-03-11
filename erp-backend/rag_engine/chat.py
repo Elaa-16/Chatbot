@@ -1,6 +1,13 @@
 """
-Construction ERP RAG Engine v27
+Construction ERP RAG Engine v30
 ================================
+Fixes vs v29:
+  - Fix 7 (v30): is_policy_question() classifier — intercepts policy/rule questions
+                 (congé duration, EPI rules, salary, sanctions, etc.) BEFORE the planner
+                 so they never reach /leave-requests or other endpoints.
+  - Fix 8 (v30): _ask_llm_rag_only() — dedicated RAG-only LLM call for policy questions,
+                 uses rag_doc_chain with reranked doc chunks (same as #H4 procedural path).
+  All previous fixes (v28, v29) preserved unchanged.
 """
 
 import logging
@@ -29,13 +36,13 @@ answer_model  = OllamaLLM(model="llama3.1:8b", timeout=OLLAMA_TIMEOUT)
 vector_store = Chroma(
     collection_name="erp_apis",
     embedding_function=embeddings,
-    persist_directory="./erp_chroma_db"
+    persist_directory=r"C:\Users\msi\Chatbot\erp-backend\rag_engine\erp_chroma_db"
 )
 api_retriever = vector_store.as_retriever(
     search_kwargs={"k": 14, "filter": {"category": "api"}}
 )
 doc_retriever = vector_store.as_retriever(
-    search_kwargs={"k": 4, "filter": {"category": {
+    search_kwargs={"k": 8, "filter": {"category": {
         "$in": ["policy", "procedure", "glossaire", "project_report",
                 "kpi_analysis", "employee_guide", "equipment_guide",
                 "supplier_info", "internal_communication"]
@@ -61,6 +68,15 @@ ROLE_ALLOWED_ENDPOINTS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 # HTTP API CALLER
 # ═══════════════════════════════════════════════════════════════════════════════
+_REQUEST_CACHE: dict = {}
+
+
+def _cache_key(endpoint: str, params: dict) -> tuple:
+    clean = {k: v for k, v in params.items()
+             if v not in (None, "", False) and k != "active_today"}
+    return (endpoint, tuple(sorted(clean.items())))
+
+
 def call_api(endpoint: str, params: dict, token: str) -> list | dict:
     if endpoint in ("/tasks/by-manager", "/stats/by-manager", "/stats/tasks"):
         return _compute_virtual_endpoint(endpoint, token)
@@ -71,6 +87,12 @@ def call_api(endpoint: str, params: dict, token: str) -> list | dict:
     clean_params = {k: v for k, v in params.items()
                     if v not in (None, "", False) and k != "active_today"}
 
+    _ck = _cache_key(endpoint, params)
+    if len(clean_params) <= 2 and _ck in _REQUEST_CACHE:
+        logger.info("API %s %s → CACHE HIT (%d items)",
+                    endpoint, clean_params, len(_REQUEST_CACHE[_ck]))
+        return _REQUEST_CACHE[_ck]
+
     try:
         resp = requests.get(url, params=clean_params, headers=headers, timeout=15)
         logger.info("API %s %s → %d", endpoint, clean_params, resp.status_code)
@@ -79,6 +101,8 @@ def call_api(endpoint: str, params: dict, token: str) -> list | dict:
             data = resp.json()
             logger.info("API %s → %s items",
                         endpoint, len(data) if isinstance(data, list) else "1")
+            if len(clean_params) <= 2:
+                _REQUEST_CACHE[_ck] = data
             return data
         elif resp.status_code in (401, 403):
             logger.warning("API %s → %d (accès refusé)", endpoint, resp.status_code)
@@ -118,10 +142,9 @@ def _compute_virtual_endpoint(endpoint: str, token: str) -> list:
         }]
 
     try:
-        t_r = requests.get(f"{API_BASE_URL}/tasks",     headers=headers, timeout=15)
-        e_r = requests.get(f"{API_BASE_URL}/employees", headers=headers, timeout=15)
-        tasks     = t_r.json() if t_r.status_code == 200 else []
-        employees = e_r.json() if e_r.status_code == 200 else []
+        token_from_headers = headers.get("Authorization","").replace("Bearer ","")
+        tasks     = call_api("/tasks",     {}, token_from_headers)
+        employees = call_api("/employees", {}, token_from_headers)
     except Exception:
         return []
 
@@ -142,20 +165,24 @@ def _compute_virtual_endpoint(endpoint: str, token: str) -> list:
 
     result = []
     for mid, mgr in managers.items():
-        tlist = mgr_tasks.get(mid, [])
-        sc    = Counter(t.get("status", "")   for t in tlist)
-        pc    = Counter(t.get("priority", "") for t in tlist)
+        tlist  = mgr_tasks.get(mid, [])
+        sc     = Counter(t.get("status", "")   for t in tlist)
+        pc     = Counter(t.get("priority", "") for t in tlist)
+        done_n = sc.get("Done", 0)
+        total  = len(tlist)
+        done_pct = round(done_n * 100 / total) if total > 0 else 0
         result.append({
             "manager_id":    mid,
             "manager_name":  f"{mgr.get('first_name','')} {mgr.get('last_name','')}".strip(),
             "department":    mgr.get("department", ""),
-            "total_tasks":   len(tlist),
+            "total_tasks":   total,
             "blocked":       sc.get("Blocked", 0),
             "blocked_tasks": sc.get("Blocked", 0),
             "todo":          sc.get("Todo", 0),
             "in_progress":   sc.get("In Progress", 0),
-            "done":          sc.get("Done", 0),
-            "done_tasks":    sc.get("Done", 0),
+            "done":          done_n,
+            "done_tasks":    done_n,
+            "done_pct":      done_pct,
             "critical_tasks":pc.get("Critical", 0),
             "open_critical": sum(1 for t in tlist
                                  if t.get("priority") == "Critical"
@@ -163,10 +190,14 @@ def _compute_virtual_endpoint(endpoint: str, token: str) -> list:
             "high_tasks":    pc.get("High", 0),
             "total_projects":len({t.get("project_id") for t in tlist
                                    if t.get("project_id")}),
-            "avg_completion": None,
         })
 
     result.sort(key=lambda r: (-(r["blocked"]), -(r["critical_tasks"])))
+
+    has_any_blocked = any(r["blocked"] > 0 for r in result)
+    if has_any_blocked:
+        result = [r for r in result if r["blocked"] > 0]
+
     return result[:20]
 
 
@@ -189,59 +220,15 @@ def sanitize_filters(filters) -> dict:
     return clean
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# RAG DOCUMENTAIRE
-# ═══════════════════════════════════════════════════════════════════════════════
-_DOC_KEYWORD_FILES = {
-    "congé":       ["politique_conges.txt"],
-    "conge":       ["politique_conges.txt"],
-    "absence":     ["politique_conges.txt"],
-    "achat":       ["procedure_achats.txt"],
-    "équipement":  ["gestion_equipements.txt"],
-    "equipement":  ["gestion_equipements.txt"],
-    "incident":    ["gestion_incidents.txt"],
-    "sécurité":    ["securite_chantier.txt"],
-    "securite":    ["securite_chantier.txt"],
-    "chantier":    ["securite_chantier.txt"],
-    "onboarding":  ["onboarding.txt"],
-    "intégration": ["onboarding.txt"],
-    "integration": ["onboarding.txt"],
-    "reglement":   ["reglement_interieur.txt"],
-    "règlement":   ["reglement_interieur.txt"],
-}
 
 
-def _fetch_doc_chunks_by_filename(filenames: list, limit_per_file: int = 5) -> list:
-    from langchain_core.documents import Document
-    results = []
-    for fname in filenames:
-        try:
-            raw = vector_store.get(where={"filename": fname},
-                                   include=["documents", "metadatas"])
-            for doc_text, meta in zip(
-                (raw.get("documents") or [])[:limit_per_file],
-                (raw.get("metadatas") or [])[:limit_per_file]
-            ):
-                results.append(Document(page_content=doc_text, metadata=meta))
-        except Exception as e:
-            logger.warning("_fetch_doc_chunks_by_filename(%s): %s", fname, e)
-    return results
 
 
 def _rerank_doc_chunks(chunks: list, question: str, top_k: int = 5) -> list:
-    q = question.lower()
-    target_files = []
-    for kw, fnames in _DOC_KEYWORD_FILES.items():
-        if kw in q:
-            for f in fnames:
-                if f not in target_files:
-                    target_files.append(f)
-    if not target_files:
-        return chunks[:top_k]
-    direct = _fetch_doc_chunks_by_filename(target_files, limit_per_file=5)
-    direct_texts = {d.page_content for d in direct}
-    rest = [c for c in chunks if c.page_content not in direct_texts]
-    return (direct + rest)[:top_k]
+    # Pure vector search — pas de keyword matching
+    return chunks[:top_k]
+    
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -272,6 +259,31 @@ _ERP_DEFINITIONS = {
     "ev": "**EV** (Earned Value) : valeur budgétaire du travail réellement accompli à date.",
     "pv": "**PV** (Planned Value) : valeur budgétaire du travail prévu à date.",
     "ac": "**AC** (Actual Cost) : coût réellement dépensé.",
+    # BTP acronyms (Fix from session)
+    "ao": (
+        "**AO** (Appel d'Offres) — procédure par laquelle le maître d'ouvrage sollicite "
+        "des offres de plusieurs entreprises pour la réalisation de travaux.\n\n"
+        "• **AO ouvert** : toute entreprise peut soumissionner\n"
+        "• **AO restreint** : seules les entreprises présélectionnées sont invitées"
+    ),
+    "moa": "**MOA** (Maître d'Ouvrage) : entité qui commande et finance le projet.",
+    "moe": "**MOE** (Maître d'Œuvre) : entité chargée de la conception et du suivi des travaux.",
+    "dce": "**DCE** (Dossier de Consultation des Entreprises) : documents remis aux candidats lors d'un AO.",
+    "dpgf": "**DPGF** (Décomposition du Prix Global et Forfaitaire) : document de chiffrage détaillé.",
+    "cctp": "**CCTP** (Cahier des Clauses Techniques Particulières) : exigences techniques du marché.",
+    "bpu": "**BPU** (Bordereau des Prix Unitaires) : liste des prix unitaires proposés.",
+    "dqs": "**DQS** (Démarche Qualité et Sécurité) : procédures qualité et sécurité chantier.",
+    "ppsps": "**PPSPS** (Plan Particulier de Sécurité et de Protection de la Santé) : document obligatoire sécurité chantier.",
+    "piq": "**PIQ** (Plan d'Inspection et Qualité) : contrôles qualité à réaliser.",
+    "erp": "**ERP** (Enterprise Resource Planning) : logiciel de gestion intégré. Ici, système de gestion des projets BTP.",
+    "hse": "**HSE** (Hygiène, Sécurité, Environnement) : département responsable de la sécurité sur les chantiers.",
+    "epi": "**EPI** (Équipements de Protection Individuelle) : casque, chaussures de sécurité, gilet, gants, lunettes, harnais. Port obligatoire sur tous les chantiers.",
+    "bpe": "**BPE** (Béton Prêt à l'Emploi) : béton fabriqué en centrale et livré sur chantier par camion toupie.",
+    "btp": "**BTP** (Bâtiment et Travaux Publics) : secteur de la construction.",
+    "drh": "**DRH** (Directeur des Ressources Humaines) : responsable du département RH.",
+    "cfo": "**CFO** (Chief Financial Officer) : Directeur Financier.",
+    "tf":  "**TF** (Taux de Fréquence) = Accidents × 1 000 000 / Heures travaillées.",
+    "tg":  "**TG** (Taux de Gravité) = Jours perdus × 1 000 / Heures travaillées.",
 }
 
 def is_definition_question(q: str) -> bool:
@@ -279,8 +291,14 @@ def is_definition_question(q: str) -> bool:
 
 def handle_definition_question(q: str) -> str | None:
     q_l = q.lower()
+    # Word-boundary matching: check if key appears as a standalone word
+    q_words = _re.findall(r"[a-zàâçéèêëîïôùûü]+", q_l)
     for key, answer in _ERP_DEFINITIONS.items():
-        if key in q_l:
+        if key in q_words:
+            return answer
+    # Fallback: substring match for keys longer than 3 chars
+    for key, answer in _ERP_DEFINITIONS.items():
+        if len(key) > 3 and key in q_l:
             return answer
     return None
 
@@ -293,13 +311,11 @@ _PROCEDURAL_PATTERNS = [
     "comment faire", "quelle est la règle", "quelle est la politique", "politique de",
     "règlement", "reglement", "étapes", "etapes", "qui approuve", "qui valide",
     "délai de", "delai de", "comment calculer", "conditions pour", "dans quel cas",
-    # Patterns de soumission / demande
     "comment soumettre", "comment deposer", "comment déposer", "comment demander",
     "comment créer", "comment creer", "comment faire une demande", "comment poser",
     "comment postuler", "comment effectuer", "soumettre une demande",
     "déposer une demande", "deposer une demande", "faire une demande de",
     "demande de conge", "demande de congé", "demander un conge", "demander un congé",
-    # Règles métier
     "quel est le délai", "quel est le delai", "quel est le processus",
     "quelle est la procédure", "quelle est la procedure",
     "combien de jours de preavis", "combien de jours de préavis",
@@ -312,7 +328,6 @@ def is_procedural_question(q: str) -> bool:
     q_l = q.lower()
     if not any(p in q_l for p in _PROCEDURAL_PATTERNS):
         return False
-    # Bloquer si la question demande des données live personnelles ou un statut
     _DATA_INTENT = [
         "montre", "affiche", "donne moi la liste", "liste des", "combien d'",
         "statut de", "état de", "mon statut", "ma demande", "mes demandes",
@@ -323,6 +338,121 @@ def is_procedural_question(q: str) -> bool:
     if any(w in q_l for w in _DATA_INTENT):
         return False
     return True
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIX 7 (v30) — POLICY QUESTION CLASSIFIER
+# Intercepts questions asking about rules/durations/policies BEFORE the planner.
+# These questions should NEVER reach /leave-requests or any other API endpoint.
+# ═══════════════════════════════════════════════════════════════════════════════
+_POLICY_PATTERNS = [
+    # Congés — durées et règles
+    r"\bcombien de jours\b",
+    r"\bdroit (à|au|aux)\b",
+    r"\bdurée (du|de la|des) congé",
+    r"\bcongé (annuel|maladie|maternité|maternite|paternité|paternite|exceptionnel|sans solde)\b",
+    r"\bpréavis\b", r"\bpreavis\b",
+    r"\bque se passe.t.il si\b",
+    r"\bsont.ils reportés\b", r"\bsont.ils reportes\b",
+    r"\bqui approuve\b",
+    r"\bsolde de congé\b", r"\bsolde de conge\b",
+    r"\breport.? (de|des) congé", r"\breport.? (de|des) conge",
+    # Sécurité chantier
+    r"\bepi\b",
+    r"\béquipement.? de protection\b", r"\bequipement.? de protection\b",
+    r"\baccident.? sur chantier\b",
+    r"\bvitesse (limite|maximale)\b",
+    r"\bformation sécurité\b", r"\bformation securite\b",
+    r"\bharnais\b",
+    r"\bcertificat médical\b", r"\bcertificat medical\b",
+    r"\bnuméro.? d'urgence\b", r"\bnumero.? d.urgence\b",
+    r"\btaux de fréquence\b", r"\btaux de frequence\b",
+    r"\btaux de gravité\b", r"\btaux de gravite\b",
+    # Règlement intérieur
+    r"\bhoraires (de travail|du bureau|chantier)\b",
+    r"\bmajoration\b",
+    r"\bsanction\b", r"\bavertissement\b",
+    r"\bavantages? sociaux\b",
+    r"\bprime.? (de fin|chantier|annuel)\b",
+    r"\bmise à pied\b", r"\bmise a pied\b",
+    r"\blicenciement\b",
+    r"\bcode vestimentaire\b",
+    r"\bheures supplémentaires\b", r"\bheures supplementaires\b",
+    r"\bpointage\b",
+    # Achats / fournisseurs
+    r"\bseuil.? d.approbation\b",
+    r"\bréférencer? (un|le|nouveau) fournisseur\b",
+    r"\breferencer? (un|le|nouveau) fournisseur\b",
+    r"\bdélai de paiement\b", r"\bdelai de paiement\b",
+    r"\bcombien de devis\b",
+    r"\bprocessus d.achat\b",
+    # Incidents / qualité
+    r"\bcatégories? d.incident\b", r"\bcategories? d.incident\b",
+    r"\bdélai.? de résolution\b", r"\bdelai.? de resolution\b",
+    r"\broot cause\b", r"\banalyse des causes\b",
+    # Onboarding / intégration
+    r"\bpremier jour\b",
+    r"\bonboarding\b",
+    r"\bpériode d.essai\b", r"\bperiode d.essai\b",
+    r"\baccès.? erp\b", r"\bacces.? erp\b",
+    r"\brôle.? (employé|manager|ceo)\b", r"\brole.? (employe|manager|ceo)\b",
+    # Équipements
+    r"\bstatuts.? (des|d.un) équipement\b", r"\bstatuts.? (des|d.un) equipement\b",
+    r"\bmaintenance préventive\b", r"\bmaintenance preventive\b",
+    r"\ben cas de panne\b",
+]
+
+_re_policy = _re.compile("|".join(_POLICY_PATTERNS), _re.IGNORECASE)
+
+# These phrases signal the question is about LIVE DATA, not policy →
+# even if a policy pattern matched, don't intercept
+_POLICY_DATA_OVERRIDE = [
+    "montre", "affiche", "liste des", "donne moi", "quels sont les",
+    "combien d'employés", "combien d employes",
+    "qui est", "quel employé", "quel employe",
+    "statut de", "ma demande", "mes demandes", "mon solde",
+    "actuellement", "en ce moment", "aujourd'hui", "maintenant",
+    "est-ce que", "est ce que",
+]
+
+
+def is_policy_question(q: str) -> bool:
+    """
+    Returns True if the question asks about a company policy, rule, or procedure
+    (duration, approval rules, safety requirements, etc.) rather than live data.
+    These questions should be answered from RAG documents only, never from API endpoints.
+    """
+    q_l = q.lower()
+    # If the question clearly wants live data, don't intercept
+    if any(w in q_l for w in _POLICY_DATA_OVERRIDE):
+        return False
+    return bool(_re_policy.search(q_l))
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# FIX 8 (v30) — RAG-ONLY LLM CALL FOR POLICY QUESTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+def _ask_llm_rag_only(question: str) -> str:
+    """
+    Answers a policy/rule question using ONLY RAG document chunks.
+    No API calls are made. Uses the same doc_retriever + _rerank_doc_chunks
+    pipeline as the #H4 procedural path, then calls rag_doc_chain.
+    """
+    logger.info("Policy question → RAG only (no API calls)")
+    raw_chunks   = doc_retriever.invoke(question)
+    proc_chunks  = _rerank_doc_chunks(raw_chunks, question, top_k=6)
+    for i, ch in enumerate(proc_chunks):
+        logger.info("Policy chunk[%d]: file=%s preview=%r",
+                    i, ch.metadata.get("filename", "?"), ch.page_content[:80])
+    doc_ctx = "\n\n".join(
+        f"[{ch.metadata.get('category', '')} — {ch.metadata.get('filename', 'doc')}]\n"
+        f"{ch.page_content}"
+        for ch in proc_chunks
+    )
+    if not doc_ctx.strip():
+        return "Je n'ai pas trouvé de documentation sur ce sujet dans les politiques internes."
+    result = rag_doc_chain.invoke({"question": question, "doc_context": doc_ctx})
+    return clean_answer(str(result))
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -450,6 +580,18 @@ def _apply_fallback_plan(q_lower: str, role_allowed: list) -> list:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PROMPTS
 # ═══════════════════════════════════════════════════════════════════════════════
+RAG_DOC_TEMPLATE = """Tu es un assistant interne. Tu reponds en francais.
+Reponds UNIQUEMENT a partir des documents fournis.
+Si l'information n'est pas dans les documents, dis-le clairement.
+Commence directement par la reponse.
+INTERDIT d'expliquer pourquoi un document n'est pas pertinent. Ne mentionne jamais les sources.
+
+DOCUMENTS:
+{doc_context}
+
+Question: {question}
+
+Reponse:"""
 PLANNER_TEMPLATE = """Tu es un planificateur de requetes pour un ERP de construction.
 Tu dois repondre UNIQUEMENT avec du JSON brut. Pas de texte. Pas de Bonjour. Pas d'explication. JUSTE le JSON.
 
@@ -594,6 +736,16 @@ R10. INTERDIT d ajouter une liste ou un resume APRES le bloc === : le bloc est l
 R11. COPIE INTEGRALE OBLIGATOIRE : Tu DOIS recopier TOUTES les lignes du bloc ===, sans exception.
      Si Resultats (16) → tu affiches exactement 16 lignes. Pas 8, pas 10, pas 12. TOUTES.
      Couper la liste = ERREUR CRITIQUE. Compter les lignes avant de repondre.
+R12. INTERDIT de dire que tu n as pas acces aux donnees si DONNEES LIVE contient un bloc === avec des resultats.
+     Les donnees sont DIRECTEMENT dans DONNEES LIVE — tu dois les afficher sans les remettre en question.
+     Toute phrase du type "je suis incapable", "je n ai pas acces", "je ne peux pas" est une ERREUR CRITIQUE
+     quand DONNEES LIVE contient des resultats.
+R13. INTERDIT d ajouter du texte APRES le dernier bloc ===. Le bloc === est la reponse complete et finale.
+     Ne JAMAIS ecrire "Le manager X a le plus de..." ou tout autre resume/commentaire apres le bloc.
+     Si la question est analytique (quel manager a le plus de X ?), reponds avec UNE SEULE PHRASE COURTE
+     avant le bloc, jamais apres.
+R14. INTERDIT de traduire les labels des blocs === : utiliser EXACTEMENT le label tel qu il apparait dans
+     DONNEES LIVE. Si DONNEES LIVE dit "=== PROJECTS ===" ecrire "=== PROJECTS ===" pas "=== PROJETS ===".
 
 EXEMPLES:
 
@@ -606,12 +758,16 @@ DONNEES: === CLIENTS === Resultats (10): - Municipalite de Sousse | Projet: Comp
 REPONSE: === CLIENTS === Resultats (10): - Municipalite de Sousse | Projet: Complexe Sportif | ...
 
 Question: quel manager a le plus de taches bloquees ?
-DONNEES: === TASKS-BY-MANAGER === - Karim (Projets) | Bloques: 4 | ...
-REPONSE: Karim Jebali a le plus de taches bloquees : 4.
+DONNEES: === TASKS-BY-MANAGER === Resultats (2): - Nadia Hamdi (Projects) | Total: 24 | Bloques: 10 | Critiques: 12 | En cours: 5 | Termines: 3 | Avancement: 13%\n- Karim Jebali (Projects) | Total: 15 | Bloques: 5 | ...
+REPONSE: === TASKS-BY-MANAGER === Resultats (2): - Nadia Hamdi (Projects) | Total: 24 | Bloques: 10 | Critiques: 12 | En cours: 5 | Termines: 3 | Avancement: 13%\n- Karim Jebali (Projects) | ...
 
 Question: quels projets sont en retard ?
 DONNEES: === KPIS === Resultats (15): - Complexe Sportif Sousse | Retard: 56j | ...
 REPONSE: === KPIS === Resultats (15): - Complexe Sportif Sousse | Retard: 56j | ...
+
+Question: quels employes sont en conge en ce moment ?
+DONNEES: === LEAVE-REQUESTS === Resultats (4): - Alice Martin | Type: Annual | Du: 2026-03-08 au 2026-03-14 | Jours: 5 | Statut: Approved ...
+REPONSE: === LEAVE-REQUESTS === Resultats (4): - Alice Martin | Type: Annual | Du: 2026-03-08 au 2026-03-14 | Jours: 5 | Statut: Approved ...
 
 Question: combien de jours de conge a pris Nadia Hamdi ?
 DONNEES:
@@ -668,6 +824,7 @@ def _resolve_name(emp_id: str) -> str:
         if e["id"] == emp_id:
             return e["full_name"]
     return emp_id
+
 def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -> str:
     label = endpoint.strip("/").replace("/", "-").upper()
     items = data if isinstance(data, list) else [data]
@@ -702,7 +859,6 @@ def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -
         return f"=== {label} ===\nResultats ({len(items)}):\n" + "\n".join(lines) + "\n"
 
     elif endpoint == "/projects":
-        # ── Vue clients : dédupliquer par client_name ─────────────────────────
         if filters.get("_client_view"):
             seen_clients: set = set()
             client_lines = []
@@ -718,7 +874,6 @@ def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -
                 )
             return (f"=== CLIENTS ===\nResultats ({len(client_lines)}):\n"
                     + "\n".join(client_lines) + "\n")
-        # ── Vue projets standard ──────────────────────────────────────────────
         lines = [
             f"- {r.get('project_id','')}: {r.get('project_name','')} | "
             f"Client: {r.get('client_name','')} | "
@@ -748,7 +903,6 @@ def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -
         return f"=== {label} ===\nResultats ({len(items)}):\n" + "\n".join(lines) + "\n"
 
     elif endpoint == "/kpis":
-        # FIX v26 : exclure les items vides/fantômes (project_name vide ou CPI=SPI=0)
         valid_items = [
             r for r in items
             if r.get('project_name') or r.get('project_id')
@@ -771,7 +925,7 @@ def format_endpoint_data(endpoint: str, data: list | dict, filters: dict = {}) -
             f"- {r.get('manager_name','')} ({r.get('department','')}) | "
             f"Total: {r.get('total_tasks',0)} | Bloques: {r.get('blocked',0)} | "
             f"Critiques: {r.get('critical_tasks',0)} | En cours: {r.get('in_progress',0)} | "
-            f"Termines: {r.get('done',0)}"
+            f"Termines: {r.get('done',0)} | Avancement: {r.get('done_pct',0)}%"
             for r in items
         ]
         return f"=== {label} ===\nResultats ({len(items)}):\n" + "\n".join(lines) + "\n"
@@ -925,20 +1079,27 @@ _LEAK_LINE_PREFIXES = (
     "voici la liste", "voici les employés", "voici les employes",
     "en résumé", "en resume", "pour résumer", "pour resumer",
     "il y a donc", "au total,", "ainsi,",
+    "je vais suivre", "je vais répondre", "je vais repondre",
+    "voici ma réponse", "voici ma reponse", "voici la réponse",
+    "voici la reponse", "voici les informations",
+    "après avoir consulté", "apres avoir consulte",
+    "en fonction des règles", "en fonction des regles",
+    "en fonction des données", "en fonction des donnees",
+    "je suis un assistant erp",
     "puisque les données", "puisque les donnees", "puisque la question",
     "remarque :", "remarque:", "note finale", "information complémentaire",
     "je suis désolé", "je suis desole", "cependant, en consultant",
     "si vous avez d'autres", "je serais ravi",
     "la réponse est", "la reponse est", "il y a", "les projets qui ont",
     "je vois que", "pour répondre", "pour repondre",
+    "le manager", "nadia hamdi avec", "karim jebali avec",
+    "le responsable", "ainsi, le", "donc, le", "en conclusion",
+    "d'après les données", "d apres les donnees", "selon les données",
+    "selon les donnees", "les résultats montrent", "les resultats montrent",
 )
+
 def _remove_duplicate_blocks(text: str) -> str:
-    """
-    Supprime les blocs === LABEL === dupliqués.
-    Quand le LLM produit un bloc complet + un bloc partiel réduit du même endpoint,
-    on garde uniquement le premier bloc (le plus grand).
-    """
-    block_pattern = _re.compile(r"(=== [A-Z][A-Z\-/ ]* ===)", _re.MULTILINE)
+    block_pattern = _re.compile(r"(=== [^=\n]+ ===)", _re.MULTILINE)
     positions = [(m.start(), m.group(1)) for m in block_pattern.finditer(text)]
     if len(positions) <= 1:
         return text
@@ -964,7 +1125,6 @@ def _remove_duplicate_blocks(text: str) -> str:
             curr_lines = data_lines(content)
             logger.info("Duplicate block '%s': first=%d lines, dup=%d lines → dropping dup",
                         label, prev_lines, curr_lines)
-            # If somehow dup is bigger, replace kept block with dup
             if curr_lines > prev_lines:
                 keep_indices[keep_indices.index(prev_idx)] = idx
                 seen_labels[label] = (idx, curr_lines)
@@ -978,14 +1138,11 @@ def _remove_duplicate_blocks(text: str) -> str:
 
 def clean_answer(text: str) -> str:
     if "===" in text:
-        # FIX v26: chercher le premier VRAI bloc (=== LABEL ===\nResultats)
-        # pour ignorer les faux en-têtes hallucinés par le LLM
-        _real = _re.compile(r"(=== [A-Z][A-Z\-/ ]* ===\nResultats \(\d+\):)", _re.MULTILINE)
+        _real = _re.compile(r"(=== [^=\n]+ ===\nResultats \(\d+\):)", _re.MULTILINE)
         _m = _real.search(text)
         if _m:
             text = text[_m.start():]
         else:
-            # Fallback: premier bloc === quelconque
             text = text[text.find("==="):]
 
     lines = text.splitlines()
@@ -1001,11 +1158,32 @@ def clean_answer(text: str) -> str:
             cleaned.append(line)
 
     result = "\n".join(cleaned)
-
-    # Supprimer les blocs === dupliqués du même endpoint
     result = _remove_duplicate_blocks(result)
+    result = _re.sub(
+        r"(?im)^(reponse\s*:|réponse\s*:|donnees\s+live\s*:|puisque la question.*$)",
+        "", result
+    )
 
-    result = _re.sub(r"(?im)^(reponse\s*:|réponse\s*:|donnees\s+live\s*:|puisque la question.*$)", "", result)
+    if "===" in result:
+        result_lines = result.splitlines()
+        last_block_start = max(
+            (i for i, ln in enumerate(result_lines) if ln.startswith("===")),
+            default=-1
+        )
+        if last_block_start >= 0:
+            cutoff = len(result_lines)
+            for i in range(last_block_start + 1, len(result_lines)):
+                ln = result_lines[i]
+                if ln.strip() == "":
+                    data_seen = any(
+                        result_lines[j].startswith("- ") or "|" in result_lines[j]
+                        for j in range(last_block_start + 1, i)
+                    )
+                    if data_seen:
+                        cutoff = i
+                        break
+            result = "\n".join(result_lines[:cutoff])
+
     result = _re.sub(r"\n{3,}", "\n\n", result)
     return result.strip()
 
@@ -1133,12 +1311,10 @@ def _get_supervised_employees(manager_id: str, token: str) -> set:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PREPROCESS
 # ═══════════════════════════════════════════════════════════════════════════════
-# FIX v26 : "actuellement" retiré de _NOW_WORDS pour /kpis (évite active_today faux positif)
 _NOW_WORDS = [
     "en ce moment", "maintenant", "aujourd'hui",
     "en ce moment-ci", "a present", "à présent", "ce jour", "now", "today",
 ]
-# Note: "actuellement" est géré séparément — uniquement pour /leave-requests
 _NOW_WORDS_LEAVE_ONLY = ["actuellement"]
 
 _FORMAT_REQUESTS = [
@@ -1193,7 +1369,6 @@ def preprocess_question(question: str, last_exchange=None):
                 return expanded, None
         return "Quels employés sont en congé en ce moment ? [active_today=true]", None
 
-    # FIX v26: active_today uniquement si mot temporel fort ET contexte congé/absence
     _leave_context = any(w in q_lower for w in ["conge", "congé", "absent", "absence", "leave"])
     _strong_now    = any(nw in q_lower for nw in _NOW_WORDS)
     _weak_now      = any(nw in q_lower for nw in _NOW_WORDS_LEAVE_ONLY)
@@ -1241,6 +1416,41 @@ def preprocess_question(question: str, last_exchange=None):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# LLM REFUSAL DETECTION  (Fix 1 — v28)
+# ═══════════════════════════════════════════════════════════════════════════════
+_REFUSAL_PHRASES = (
+    "je suis incapable",
+    "je ne peux pas",
+    "je n'ai pas accès",
+    "je n'ai pas acces",
+    "il m'est impossible",
+    "je ne suis pas en mesure",
+    "je n'ai pas trouvé",
+    "je n'ai pas trouve",
+    "données non disponibles",
+    "donnees non disponibles",
+    "je n'ai aucune information",
+    "je n'ai aucune donnee",
+    "je n'ai aucune donnée",
+    "impossible de récupérer",
+    "impossible de recuperer",
+    "je ne dispose pas",
+    "ces informations ne sont pas disponibles",
+    "cette information n'est pas disponible",
+)
+
+def _is_llm_refusal(answer: str, live_context: str) -> bool:
+    """Returns True when the LLM produced a refusal but live data is actually present."""
+    answer_lower = answer.lower()
+    has_live_data = "===" in live_context and "Resultats (" in live_context
+    is_refusal    = (
+        any(p in answer_lower for p in _REFUSAL_PHRASES)
+        and "===" not in answer
+    )
+    return is_refusal and has_live_data
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 def answer_question(
@@ -1251,16 +1461,28 @@ def answer_question(
     token: str = "",
     last_exchange=None,
 ) -> str:
-    # Charger le cache employés au premier appel uniquement (jamais recharger)
+    global _REQUEST_CACHE
+    _REQUEST_CACHE = {}
+
     if token and not _EMPLOYEE_CACHE:
         load_employee_cache(token)
+
+    # ── FIX: handle bare "fichier" message ──────────────────────────────────
+    _FILE_ONLY_MSGS = {"fichier", "file", "document", "pièce jointe", "piece jointe", "attachment"}
+    if question.strip().lower() in _FILE_ONLY_MSGS:
+        return (
+            "J'ai bien reçu votre fichier. Cependant, je ne peux pas lire "
+            "directement les fichiers joints pour l'instant.\n\n"
+            "Si vous souhaitez que j'analyse son contenu, veuillez copier-coller "
+            "le texte du fichier dans le chat."
+        )
 
     # Step 0 : Preprocess
     question, _resolved_id = preprocess_question(question, last_exchange=last_exchange)
     logger.info("Processed question: %s (resolved_id=%s)", question, _resolved_id)
     q_lower = question.lower()
 
-    # Sécurité manager : si question porte sur un employé nommé mais non résolu
+    # Sécurité manager
     if user_role == "manager" and _resolved_id is None:
         _name_words = [w for w in question.split()
                        if len(w) > 2 and w[0].isupper() and w.isalpha()
@@ -1283,6 +1505,11 @@ def answer_question(
         if definition:
             logger.info("#H2 Glossary answer")
             return definition
+
+    # ── FIX 7 (v30): Policy question → RAG only, skip planner entirely ──────
+    if is_policy_question(q_lower):
+        logger.info("#H5 Policy question → RAG only (skipping planner + all API calls)")
+        return _ask_llm_rag_only(question)
 
     # #H4 — Questions procédurales → RAG documentaire pur
     if is_procedural_question(q_lower):
@@ -1332,7 +1559,6 @@ def answer_question(
     logger.info("LLM Plan reasoning: %s", plan.get("reasoning", "—"))
     logger.info("LLM Plan endpoints: %s", plan.get("endpoints", []))
 
-    # Fallback déterministe si le Planner a raté
     if not plan.get("endpoints"):
         fallback = _apply_fallback_plan(q_lower, role_allowed)
         if fallback:
@@ -1340,7 +1566,6 @@ def answer_question(
             plan["reasoning"] = "fallback-deterministe"
             logger.info("Plan remplacé par fallback: %s", fallback)
 
-    # Dédupliquer
     seen_keys, deduped = set(), []
     for item in plan.get("endpoints", []):
         ep = item.get("endpoint", "")
@@ -1356,7 +1581,7 @@ def answer_question(
         logger.warning("Planner over-fetched %d endpoints → tronqué à 6", len(deduped))
         deduped = deduped[:6]
     plan["endpoints"] = deduped
-    
+
     for item in plan.get("endpoints", []):
         if item.get("endpoint") == "/tasks":
             f = item.get("filters", {})
@@ -1364,7 +1589,6 @@ def answer_question(
                 f.pop("status")
                 logger.info("POST-PLAN: status retiré de /tasks Critical — géré par Python")
 
-    # Context window management
     _ANALYTICAL_WORDS = ["quel","quels","meilleur","pire","top","classement",
                          "plus","moins","combien","comparer","performance",
                          "retard","bloqué","critique","risque","depass"]
@@ -1397,23 +1621,18 @@ def answer_question(
                 n_endpoints, per_ep_limit, is_analytical, is_listing)
     logger.info("Final plan: %s", plan)
 
-    # Précharger la liste des employés supervisés si manager
     _supervised_ids: set | None = None
     if user_role == "manager":
         _supervised_ids = _get_supervised_employees(user_id, token)
         logger.info("Manager %s scope: %s", user_id, _supervised_ids)
 
-    # POST-PLAN FIX : Pour un manager, si /tasks a assigned_to=user_id sans résolution
-    # d'employé spécifique → c'est une injection erronée du planner → supprimer
-    # (le scope équipe sera géré par _team_filter ou par l'absence de filtre)
     if user_role == "manager" and _resolved_id is None:
         for item in plan.get("endpoints", []):
             f = item.get("filters", {})
             if (item.get("endpoint") == "/tasks"
                     and f.get("assigned_to") == user_id):
                 f.pop("assigned_to")
-                logger.info("POST-PLAN: assigned_to=%s retiré de /tasks pour manager "
-                            "(scope équipe géré séparément)", user_id)
+                logger.info("POST-PLAN: assigned_to=%s retiré de /tasks pour manager", user_id)
             if (item.get("endpoint") in ("/leave-requests", "/timesheets", "/employees")
                     and f.get("employee_id") == user_id
                     and not any(w in q_lower for w in ["moi", "mes conge", "mon conge",
@@ -1422,7 +1641,6 @@ def answer_question(
                 logger.info("POST-PLAN: employee_id=%s retiré de %s pour manager",
                             user_id, item.get("endpoint"))
 
-    # POST-PLAN FIX : supervised_by virtuel → _team_filter
     if user_role == "manager" and _supervised_ids is not None:
         for item in plan.get("endpoints", []):
             f = item.get("filters", {})
@@ -1432,7 +1650,6 @@ def answer_question(
                 logger.info("POST-PLAN: supervised_by virtuel intercepté sur %s → _team_filter",
                             item.get("endpoint",""))
 
-    # POST-PLAN FIX : client question → _client_view marker
     _CLIENT_WORDS = ["client", "clients", "mes clients", "liste clients", "lister clients"]
     if any(w in q_lower for w in _CLIENT_WORDS):
         for item in plan.get("endpoints", []):
@@ -1451,7 +1668,6 @@ def answer_question(
 
         filters = sanitize_filters(item.get("filters", {}))
 
-        # Employee ID guard
         if endpoint in ("/leave-requests", "/tasks", "/timesheets", "/employees"):
             id_key  = "assigned_to" if endpoint == "/tasks" else "employee_id"
             raw_eid = filters.get("employee_id","") or filters.get("assigned_to","")
@@ -1471,36 +1687,28 @@ def answer_question(
                 logger.info("Propagated resolved id=%s → %s (key=%s)",
                             _resolved_id, endpoint, id_key)
 
-        # MANAGER SCOPE GUARD
         if user_role == "manager" and _supervised_ids is not None:
             id_key  = "assigned_to" if endpoint == "/tasks" else "employee_id"
             queried_id = filters.get(id_key) or filters.get("employee_id") or filters.get("assigned_to")
             if queried_id and queried_id != user_id:
                 if queried_id not in _supervised_ids:
                     logger.warning(
-                        "MANAGER SCOPE VIOLATION: %s (%s) tried to access data for %s "
-                        "(not in supervised team %s)",
-                        user_name, user_id, queried_id, _supervised_ids
+                        "MANAGER SCOPE VIOLATION: %s (%s) tried to access data for %s",
+                        user_name, user_id, queried_id
                     )
                     live_parts.append(
                         f"=== ACCÈS REFUSÉ ===\n"
-                        f"Vous n'êtes pas autorisé à consulter les données de l'employé {queried_id}. "
-                        f"En tant que manager, vous pouvez uniquement accéder aux données "
-                        f"de votre propre équipe.\n"
+                        f"Vous n'êtes pas autorisé à consulter les données de l'employé {queried_id}.\n"
                     )
                     continue
 
-        # Extraire filtres virtuels avant appel API
-        active_today   = filters.pop("active_today", False)
-        delayed_filter = filters.pop("delayed", None)
-        client_view    = filters.pop("_client_view", False)
-        # Mémoriser le risk_level demandé AVANT l'appel
+        active_today         = filters.pop("active_today", False)
+        delayed_filter       = filters.pop("delayed", None)
+        client_view          = filters.pop("_client_view", False)
         requested_risk_level = filters.get("risk_level", None)
 
-        # Appel HTTP vers FastAPI
         data = call_api(endpoint, filters, token)
 
-        # TEAM FILTER
         if item.get("_team_filter") and user_role == "manager" and _supervised_ids is not None:
             team_ids = _supervised_ids - {user_id}
             before_tf = len(data) if isinstance(data, list) else 0
@@ -1509,7 +1717,6 @@ def answer_question(
                 data = [r for r in data if r.get(id_key_tf, "") in team_ids]
             logger.info("Team filter (%s): %d → %d (manager exclu)", endpoint, before_tf, len(data))
 
-        # ── FIX v26 : KPI dedup intelligent ──────────────────────────────────
         if endpoint == "/kpis" and isinstance(data, list):
             seen_proj: dict = {}
             for r in data:
@@ -1543,42 +1750,32 @@ def answer_question(
             logger.info("KPIs dedup (risk_level=%s, delayed=%s): %d → %d projets uniques",
                         requested_risk_level, delayed_filter, before_dedup, len(data))
 
-        # Filtre delayed post-dedup
         if delayed_filter and endpoint == "/kpis" and isinstance(data, list):
             before = len(data)
             data = [r for r in data if (r.get("schedule_variance_days") or 0) > 0]
             logger.info("delayed filter final: %d → %d projets en retard", before, len(data))
 
-        # Filtre active_today post-appel
         if active_today and isinstance(data, list):
             today = _date.today().isoformat()
             data  = [r for r in data
                      if r.get("start_date","") <= today <= r.get("end_date","9999")]
             logger.info("active_today filter (%s): %d résultats", today, len(data))
 
-        # ── FIX v27 : Filtre "non terminées" côté Python pour /tasks ─────────
-        # Si la question demande des tâches "non terminées" (critiques ou autres),
-        # on exclut les tâches Done après l'appel API (le planner ne met pas status=Todo
-        # pour éviter d'exclure In Progress et Blocked)
         if endpoint == "/tasks" and "non termin" in q_lower and isinstance(data, list):
             before_nt = len(data)
             data = [r for r in data if r.get("status", "") != "Done"]
             logger.info("Filtre 'non terminées': %d → %d (Done exclus)", before_nt, len(data))
-                                
 
-        # Row limit
         row_limit = item.get("_row_limit")
         if row_limit and isinstance(data, list):
             data = data[:row_limit]
 
-        # Bilan congés d'un employé résolu : retirer status pour avoir Approved+Pending
         if (endpoint == "/leave-requests" and _resolved_id and
                 any(w in q_lower for w in ["combien de jours","nombre de jours","total","bilan","conge","congé","pris"])):
             filters_bilan = {k: v for k, v in filters.items() if k != "status"}
             data = call_api(endpoint, filters_bilan, token)
             logger.info("FIX bilan: appel sans filtre status pour avoir Approved+Pending")
 
-        # Bilan congés : format avec résumé
         if (endpoint == "/leave-requests" and _resolved_id and
                 any(w in q_lower for w in ["combien de jours","nombre de jours","total","bilan"])):
             if isinstance(data, list):
@@ -1610,35 +1807,40 @@ def answer_question(
                 f"Resultats (0): Aucun resultat pour filtres: {filters}\n"
             )
 
-    # Priorité d'affichage: TASKS avant PROJECTS pour questions sur tâches
     if any(w in q_lower for w in ["tâche", "tache", "task"]):
-        _task_parts = [p for p in live_parts if p.startswith("=== TASKS")]
+        _task_parts  = [p for p in live_parts if p.startswith("=== TASKS")]
         _other_parts = [p for p in live_parts if not p.startswith("=== TASKS")]
         live_parts = _task_parts + _other_parts
     live_context = "\n".join(live_parts) if live_parts else "Aucune donnee live — question documentaire."
 
     # ── Cross-query : KPIs en retard ET incidents ─────────────────────────────
     _is_cross_kpi_issue = any(w in q_lower for w in [
-        "et ont", "et qui ont", "ayant", "avec des incidents", "ont des incidents", "et ont des"
-    ])
+        "et ont", "et qui ont", "ayant", "avec des incidents", "ont des incidents", "et ont des",
+        "incidents critical", "incidents critiques", "incidents high", "incidents élevés",
+        "incidents elevés", "incidents élevés", "critical ou high", "critiques ou high",
+        "critiques ou hauts", "critical ou hauts", "critical ou élevés",
+        "retard et ont", "retard et", "en retard et",
+    ]) and any(w in q_lower for w in ["incident", "issue", "problème", "probleme"])
 
     if _is_cross_kpi_issue:
-        _kpi_data_raw   = None
-        _issue_data_raw = []
-        for item in plan.get("endpoints", []):
-            ep = item.get("endpoint", "")
-            if ep == "/kpis" and _kpi_data_raw is None:
-                _kpi_data_raw = call_api("/kpis", {}, token)
-                _kpi_data_raw = [r for r in _kpi_data_raw if (r.get("schedule_variance_days") or 0) > 0]
-                seen_p = {}
-                for r in _kpi_data_raw:
-                    pid = r.get("project_id","")
-                    if pid not in seen_p or (r.get("schedule_variance_days",0) > seen_p[pid].get("schedule_variance_days",0)):
-                        seen_p[pid] = r
-                _kpi_data_raw = sorted(seen_p.values(), key=lambda r: -(r.get("schedule_variance_days") or 0))
-            if ep == "/issues":
-                batch = call_api("/issues", item.get("filters", {}), token)
-                _issue_data_raw.extend(batch)
+        _kpi_data_raw = call_api("/kpis", {}, token)
+        _kpi_data_raw = [r for r in _kpi_data_raw if (r.get("schedule_variance_days") or 0) > 0]
+        seen_p: dict = {}
+        for r in _kpi_data_raw:
+            pid = r.get("project_id","")
+            if pid not in seen_p or (r.get("schedule_variance_days",0) > seen_p[pid].get("schedule_variance_days",0)):
+                seen_p[pid] = r
+        _kpi_data_raw = sorted(seen_p.values(), key=lambda r: -(r.get("schedule_variance_days") or 0))
+
+        _issue_filters: dict = {}
+        if "critical" in q_lower and "high" not in q_lower:
+            _issue_filters["severity"] = "Critical"
+        elif "high" in q_lower and "critical" not in q_lower:
+            _issue_filters["severity"] = "High"
+        _issue_data_raw = call_api("/issues", _issue_filters, token)
+
+        logger.info("Cross KPI/Issues: %d delayed projects, %d issues (filters=%s)",
+                    len(_kpi_data_raw), len(_issue_data_raw), _issue_filters)
 
         if _kpi_data_raw and _issue_data_raw:
             issue_pids = {r.get("project_id","") for r in _issue_data_raw if r.get("project_id")}
@@ -1652,9 +1854,79 @@ def answer_question(
                                if not p.startswith("=== KPIS") and not p.startswith("=== ISSUES")]
                 live_context = "\n".join(other_parts + [crossed_block])
 
+    # ── Cross-query : Managers avec tâches bloquées ET projets en retard ───────
+    _CROSS_MANAGER_BLOCKED_KWS  = ["tâches bloquées", "taches bloquées", "taches bloquees",
+                                    "tâches bloquées", "bloquées et", "bloquées"]
+    _CROSS_MANAGER_DELAYED_KWS  = ["projets en retard", "retard"]
+    _CROSS_MANAGER_KWS_TRIGGER  = ["manager", "managers", "responsable", "responsables",
+                                    "chef", "chefs"]
+    _is_cross_manager_delayed = (
+        any(w in q_lower for w in _CROSS_MANAGER_BLOCKED_KWS)
+        and any(w in q_lower for w in _CROSS_MANAGER_DELAYED_KWS)
+        and any(w in q_lower for w in _CROSS_MANAGER_KWS_TRIGGER)
+    )
+
+    if _is_cross_manager_delayed:
+        logger.info("Cross-filter Manager/Delayed triggered")
+        all_tasks_mgr = call_api("/tasks", {}, token)
+        all_kpis_delayed = call_api("/kpis", {}, token)
+        delayed_pids = {
+            r.get("project_id","") for r in all_kpis_delayed
+            if (r.get("schedule_variance_days") or 0) > 0 and r.get("project_id")
+        }
+        mgr_data_raw = _compute_virtual_endpoint("/tasks/by-manager", token)
+
+        all_employees_mgr = call_api("/employees", {}, token)
+        managers_map = {e["employee_id"]: e for e in all_employees_mgr
+                        if e.get("role") == "manager"}
+        emp_to_mgr_map: dict = {}
+        for mid, mgr in managers_map.items():
+            sup = mgr.get("supervised_employees") or ""
+            for eid in [x.strip() for x in sup.replace(";", ",").split(",") if x.strip()]:
+                emp_to_mgr_map[eid] = mid
+        mgr_delayed_pids: dict = {}
+        for t in all_tasks_mgr:
+            aid = t.get("assigned_to","")
+            pid = t.get("project_id","")
+            mid = emp_to_mgr_map.get(aid) or (aid if aid in managers_map else None)
+            if mid and pid in delayed_pids:
+                mgr_delayed_pids.setdefault(mid, set()).add(pid)
+
+        mgr_stats = mgr_data_raw if isinstance(mgr_data_raw, list) else []
+
+        crossed_mgrs = [
+            r for r in mgr_stats
+            if r.get("blocked", 0) > 0
+            and r.get("manager_id","") in mgr_delayed_pids
+        ]
+        lines_mgr = []
+        for r in crossed_mgrs:
+            mid = r.get("manager_id","")
+            n_delayed = len(mgr_delayed_pids.get(mid, set()))
+            lines_mgr.append(
+                f"- {r.get('manager_name','')} ({r.get('department','')}) | "
+                f"Total: {r.get('total_tasks',0)} | Bloques: {r.get('blocked',0)} | "
+                f"Critiques: {r.get('critical_tasks',0)} | "
+                f"Projets en retard: {n_delayed} | Avancement: {r.get('done_pct',0)}%"
+            )
+        logger.info("Cross-filter Manager/Delayed: %d managers with blocked + delayed projects",
+                    len(crossed_mgrs))
+        if lines_mgr:
+            _header_mgr = ("=== MANAGERS (bloques + projets en retard) ===\n"
+                           "Resultats (" + str(len(crossed_mgrs)) + "):\n")
+            crossed_block_mgr = _header_mgr + "\n".join(lines_mgr)
+            other_parts = [p for p in live_parts
+                           if not p.startswith("=== TASKS-BY-MANAGER")
+                           and not p.startswith("=== KPIS")]
+            live_context = "\n".join(other_parts + [crossed_block_mgr])
+        else:
+            live_context = (
+                "=== MANAGERS (bloques + projets en retard) ===\n"
+                "Resultats (0): Aucun manager n a simultanement des taches bloquees "
+                "et des projets en retard.\n"
+            )
+
     # ── Cross-query : Employés avec tâches critiques ET en congé ─────────────
-    # FIX v27 : Exiger présence simultanée des deux familles de mots
-    # pour éviter faux positif sur "tâches critiques non terminées sur mes projets"
     _CROSS_CRITICAL_KWS = ["taches critiques", "tâches critiques"]
     _CROSS_LEAVE_KWS    = [
         "en conge", "en congé", "sont en conge", "sont en congé",
@@ -1714,13 +1986,11 @@ def answer_question(
         else:
             live_context = "=== EMPLOYEES (tâches critiques + en congé) ===\nResultats (0): Aucun employé n'a simultanément des tâches critiques et un congé approuvé actif.\n"
 
-    # Accès refusé → message clair
     if "=== ACCÈS REFUSÉ ===" in live_context:
         if _resolved_id is None:
             return "❓ Je n'ai pas pu identifier cet employé avec certitude. Pouvez-vous préciser le nom complet ?"
         return "⛔ Accès refusé : vous pouvez uniquement accéder aux données de votre propre équipe."
 
-    # Garde-fou anti-hallucination
     _DATA_WORDS = [
         "employe", "employé", "tache", "tâche", "projet", "conge", "congé",
         "liste", "tous", "toutes", "affiche", "montre", "donne", "incident",
@@ -1731,11 +2001,11 @@ def answer_question(
             and any(w in q_lower for w in _DATA_WORDS)):
         logger.warning("Garde-fou anti-hallucination : pas de données live pour une question de données")
         return (
-    "Je suis votre assistant ERP BTP. 🏗️\n\n"
-    "Cette demande est hors de mon périmètre (météo, données externes, etc.).\n\n"
-    "Je peux vous aider sur : projets, KPIs, employés, tâches, "
-    "congés, incidents, équipements, fournisseurs et procédures internes."
-)
+            "Je suis votre assistant ERP BTP. 🏗️\n\n"
+            "Cette demande est hors de mon périmètre (météo, données externes, etc.).\n\n"
+            "Je peux vous aider sur : projets, KPIs, employés, tâches, "
+            "congés, incidents, équipements, fournisseurs et procédures internes."
+        )
 
     # Step 4 : Documentary context
     doc_chunks_reranked = _rerank_doc_chunks(doc_chunks, question, top_k=3)
@@ -1757,53 +2027,55 @@ def answer_question(
     answer = clean_answer(str(result))
     answer = _re.sub(r'\[employee_id=E\d+[^\]]*\]', '', answer).strip()
 
-    # ── FIX v27 : Fallback _answer_useless amélioré ───────────────────────────
-    # Détecter tout label LLM absent du live_context (pas juste TASKS-BY-MANAGER)
-    _live_labels   = set(_re.findall(r"=== ([A-Z][A-Z\-()/ ]* ===)", live_context))
-    _answer_labels = set(_re.findall(r"=== ([A-Z][A-Z\-()/ ]* ===)", answer))
+    _live_labels      = set(_re.findall(r"=== ([^=\n]+ ===)", live_context))
+    _answer_labels    = set(_re.findall(r"=== ([^=\n]+ ===)", answer))
     _hallucinated_labels = _answer_labels - _live_labels - {"ACCÈS REFUSÉ ==="}
+
+    if _hallucinated_labels:
+        logger.warning("LLM hallucinated labels %s not in live_context → flagged",
+                       _hallucinated_labels)
+
+    _EMPTY_ANSWER_STRINGS = {
+        "aucune donnée disponible pour cette requête.",
+        "aucune donnée disponible — impossible de récupérer les informations demandées.",
+        "je n'ai pas trouvé de documentation sur ce sujet.",
+        "",
+    }
 
     _answer_useless = (
         not answer
-        or answer.strip() == "Aucune donnée disponible pour cette requête."
+        or answer.strip().lower() in _EMPTY_ANSWER_STRINGS
         or ("aucune" in answer.lower() and "===" not in answer)
-        or bool(_hallucinated_labels)   # ← FIX v27 : remplace condition hardcodée
+        or bool(_hallucinated_labels)
+        or _is_llm_refusal(answer, live_context)
     )
 
-    if _hallucinated_labels:
-        logger.warning("LLM hallucinated labels %s not in live_context → fallback", _hallucinated_labels)
+    if _answer_useless and "=== " in live_context and "Resultats (" in live_context:
+        logger.warning("LLM answer empty/useless/refusal — falling back to live_context directly")
+        _blocks = _re.findall(
+            r"=== [^=\n]+ ===\nResultats \(\d+\):.*?(?=\n=== |$)",
+            live_context, _re.DOTALL
+        )
+        if _blocks:
+            answer = "\n\n".join(b.strip() for b in _blocks)
+        else:
+            answer = live_context.strip()
 
-        if _answer_useless and "=== " in live_context and "Resultats (" in live_context:
-            logger.warning("LLM answer empty/useless — falling back to live_context directly")
-            _blocks = _re.findall(r"=== [A-Z][A-Z\-()/ ]* ===\nResultats \(\d+\):.*?(?=\n=== |$)",
-                                live_context, _re.DOTALL)
-            if _blocks:
-                answer = "\n\n".join(b.strip() for b in _blocks)
-            else:
-                answer = live_context.strip()
+    if not answer or answer.strip().lower() in _EMPTY_ANSWER_STRINGS:
+        answer = (
+            "Je suis votre assistant ERP BTP. 🏗️\n\n"
+            "Je n'ai pas pu récupérer cette information — "
+            "elle est probablement hors de mon périmètre "
+            "(météo, actualités, données externes, etc.).\n\n"
+            "Je peux vous aider sur :\n"
+            "  • 📁 Projets & KPIs\n"
+            "  • 👷 Employés & équipes\n"
+            "  • ✅ Tâches & incidents\n"
+            "  • 🏖️ Congés & absences\n"
+            "  • 🔧 Équipements & fournisseurs\n"
+            "  • 📋 Procédures & politiques internes"
+        )
+        logger.info("Fallback final déclenché — réponse hors périmètre")
 
-        # ── Fallback final : réponse vide ou hors périmètre ──────────────────────
-        _EMPTY_ANSWERS = {
-            "aucune donnée disponible pour cette requête.",
-            "aucune donnée disponible — impossible de récupérer les informations demandées.",
-            "je n'ai pas trouvé de documentation sur ce sujet.",
-            "",
-        }
-        if not answer or answer.strip().lower() in _EMPTY_ANSWERS:
-            answer = (
-                "Je suis votre assistant ERP BTP. 🏗️\n\n"
-                "Je n'ai pas pu récupérer cette information — "
-                "elle est probablement hors de mon périmètre "
-                "(météo, actualités, données externes, etc.).\n\n"
-                "Je peux vous aider sur :\n"
-                "  • 📁 Projets & KPIs\n"
-                "  • 👷 Employés & équipes\n"
-                "  • ✅ Tâches & incidents\n"
-                "  • 🏖️ Congés & absences\n"
-                "  • 🔧 Équipements & fournisseurs\n"
-                "  • 📋 Procédures & politiques internes"
-            )
-            logger.info("Fallback final déclenché — réponse hors périmètre")
-
-        logger.info("=== RAW ANSWER ===\n%s\n==================", repr(answer))
+    logger.info("=== RAW ANSWER ===\n%s\n==================", repr(answer))
     return answer

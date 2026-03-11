@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getStats, getProjects, getKPIs } from '../services/api';
-import AIAssistant from './AIAssistant_temp';  // ✅ déjà correct
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp, TrendingDown, Briefcase, DollarSign,
-  Target, AlertCircle, Bot, CheckCircle, Clock,
+  Target, AlertCircle, CheckCircle, Clock,
   MapPin, BarChart2, ArrowRight
 } from 'lucide-react';
 
@@ -16,7 +15,6 @@ const Dashboard = () => {
   const [projects, setProjects] = useState([]);
   const [kpis, setKPIs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAI, setShowAI] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -52,23 +50,24 @@ const Dashboard = () => {
     ? ((stats.total_actual_cost - stats.total_budget) / stats.total_budget * 100).toFixed(2)
     : 0;
 
- // ✅ Bloc complet — remplacer les 4 lignes de variables
-const delayedProjects = kpis.filter((k, i, arr) =>
-  (k.schedule_variance_days || 0) > 0 &&
-  arr.findIndex(x => x.project_id === k.project_id) === i
-).length;
+  // ✅ Bloc complet — remplacer les 4 lignes de variables
+  const delayedProjects = kpis.filter((k, i, arr) =>
+    (k.schedule_variance_days || 0) > 0 &&
+    arr.findIndex(x => x.project_id === k.project_id) === i
+  ).length;
 
-const onTrackProjects = projects.filter(p =>
-  p.status === 'In Progress' &&
-  !kpis.some(k => k.project_id === p.project_id && (k.schedule_variance_days || 0) > 0)
-).length;
+  const onTrackProjects = projects.filter(p =>
+    p.status === 'In Progress' &&
+    !kpis.some(k => k.project_id === p.project_id && (k.schedule_variance_days || 0) > 0)
+  ).length;
 
-const completedProjects = projects.filter(p => p.status === 'Completed').length;
+  const completedProjects = projects.filter(p => p.status === 'Completed').length;
 
-const criticalProjects = kpis.filter((k, i, arr) =>
-  (k.schedule_variance_days || 0) > 30 &&
-  arr.findIndex(x => x.project_id === k.project_id) === i
-).length;
+  const criticalProjects = kpis.filter((k, i, arr) =>
+    (k.schedule_variance_days || 0) > 30 &&
+    arr.findIndex(x => x.project_id === k.project_id) === i
+  ).length;
+
   const hasKpiAlerts = kpis.some(kpi => kpi.safety_incidents > 2 || kpi.quality_score < 85);
 
   return (
@@ -84,10 +83,6 @@ const criticalProjects = kpis.filter((k, i, arr) =>
             Voici un aperçu de vos projets et indicateurs de performance
           </p>
         </div>
-        <button style={styles.aiBtn} onClick={() => setShowAI(true)}>
-          <Bot size={18} />
-          Assistant IA
-        </button>
       </div>
 
       {/* ── Welcome Banner ── */}
@@ -174,10 +169,10 @@ const criticalProjects = kpis.filter((k, i, arr) =>
           </div>
           <div style={styles.statusList}>
             {[
-              { label: 'En bonne voie', count: onTrackProjects, color: '#10b981', bg: '#ecfdf5', icon: <CheckCircle size={16} color="#10b981" /> },
-              { label: 'En retard', count: delayedProjects, color: '#f59e0b', bg: '#fffbeb', icon: <Clock size={16} color="#f59e0b" /> },
-              { label: 'Terminés', count: completedProjects, color: '#3b82f6', bg: '#eff6ff', icon: <CheckCircle size={16} color="#3b82f6" /> },
-              { label: 'Critiques', count: criticalProjects, color: '#ef4444', bg: '#fef2f2', icon: <AlertCircle size={16} color="#ef4444" /> },
+              { label: 'En bonne voie', count: onTrackProjects,   color: '#10b981', bg: '#ecfdf5', icon: <CheckCircle size={16} color="#10b981" /> },
+              { label: 'En retard',     count: delayedProjects,   color: '#f59e0b', bg: '#fffbeb', icon: <Clock size={16} color="#f59e0b" /> },
+              { label: 'Terminés',      count: completedProjects, color: '#3b82f6', bg: '#eff6ff', icon: <CheckCircle size={16} color="#3b82f6" /> },
+              { label: 'Critiques',     count: criticalProjects,  color: '#ef4444', bg: '#fef2f2', icon: <AlertCircle size={16} color="#ef4444" /> },
             ].map((item, i) => (
               <div key={i} style={{ ...styles.statusItem, backgroundColor: item.bg }}>
                 <div style={styles.statusLeft}>
@@ -194,9 +189,9 @@ const criticalProjects = kpis.filter((k, i, arr) =>
         <div style={styles.card}>
           <div style={styles.cardHeader}>
             <h2 style={styles.cardTitle}>Projets Récents</h2>
-              <button style={styles.seeAllBtn} onClick={() => navigate('/projects')}>
-    Voir tout <ArrowRight size={14} />
-  </button>
+            <button style={styles.seeAllBtn} onClick={() => navigate('/projects')}>
+              Voir tout <ArrowRight size={14} />
+            </button>
           </div>
           <div style={styles.projectList}>
             {projects.slice(0, 5).map((project) => (
@@ -232,9 +227,6 @@ const criticalProjects = kpis.filter((k, i, arr) =>
           </div>
         </div>
       </div>
-
-      {/* ── AI Assistant Modal ── */}
-      {showAI && <AIAssistant onClose={() => setShowAI(false)} />}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -290,21 +282,6 @@ const styles = {
     color: '#64748b',
     fontSize: '14px',
     margin: '4px 0 0',
-  },
-  aiBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    background: 'linear-gradient(135deg, #6d28d9, #7c3aed)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '12px',
-    padding: '10px 20px',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    boxShadow: '0 4px 14px rgba(109,40,217,0.35)',
-    transition: 'transform 0.15s, box-shadow 0.15s',
   },
 
   // Banner

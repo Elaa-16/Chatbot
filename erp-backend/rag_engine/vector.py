@@ -17,7 +17,7 @@ embeddings = OllamaEmbeddings(model="mxbai-embed-large")
 vector_store = Chroma(
     collection_name="erp_apis",
     embedding_function=embeddings,
-    persist_directory="./erp_chroma_db"
+    persist_directory=r"C:\Users\msi\Chatbot\erp-backend\rag_engine\erp_chroma_db"
 )
 vector_store.reset_collection()
 print("Cleared vector store")
@@ -96,8 +96,8 @@ print(f"API descriptions: {len(api_docs)} documents")
 # ════════════════════════════════════════════════════════════════════════════
 
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=600,
-    chunk_overlap=100,
+    chunk_size=1000,   # 600 → 1000 : sections complètes dans un seul chunk
+    chunk_overlap=200, # 100 → 200 : évite de couper une règle en deux chunks
     separators=["\n\n", "\n", ".", " "]
 )
 

@@ -41,6 +41,11 @@ const getUserId = () => {
   }
 };
 
+// ─── Storage key helper ────────────────────────────────────────────────────────
+// FIX: single source of truth for the localStorage key — always user-scoped
+const getStorageKey = () => `erp_chat_conversations_${getUserId()}`;
+const getActiveKey  = () => `erp_chat_active_conv_${getUserId()}`;
+
 const getBotResponse = async (userMessage, lastExchange = {}) => {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("user_role");
@@ -171,7 +176,7 @@ const ProgressBar = ({ pct, color, height = 5 }) => {
 };
 
 // ═══════════════════════════════════════════════════════
-// BLOCK PARSER — FIX: filtre ligne "Bilan ..."
+// BLOCK PARSER
 // ═══════════════════════════════════════════════════════
 const parsePipeLine = (line) => {
   const clean = line.replace(/^[\s\-•·]+/, '').trim();
@@ -179,15 +184,14 @@ const parsePipeLine = (line) => {
   if (clean.endsWith('|')) return null;
   if (/^Repartition:/i.test(clean)) return null;
   if (/^Total\s/i.test(clean)) return null;
-  if (/^Bilan\s/i.test(clean)) return null; // FIX: ignorer la ligne résumé bilan
+  if (/^Bilan\s/i.test(clean)) return null;
 
-  // Employee line: "First Last — Position — Department"
   if (clean.match(/^[A-ZÀÂÇÉÈÊËÎÏÔÙÛÜ]/) && clean.includes(' — ') && !clean.includes(' | ')) {
     const parts = clean.split(' — ');
     return { _type: 'employee', Nom: parts[0]?.trim(), Poste: parts[1]?.trim(), Département: parts[2]?.trim() };
   }
 
- const obj = {};
+  const obj = {};
   const segments = clean.split(' | ');
   segments.forEach((seg, idx) => {
     const colonIdx = seg.indexOf(':');
@@ -200,8 +204,6 @@ const parsePipeLine = (line) => {
     }
   });
 
-  // FIX: lignes au format "T005: Réunion sécurité | Statut: ..."
-  // parsées en obj['T005'] = 'Réunion sécurité' → extraire en _name
   if (!obj['_name']) {
     const firstKey = Object.keys(obj)[0] || '';
     if (/^[A-Z]{1,3}\d+$/.test(firstKey)) {
@@ -231,20 +233,18 @@ const parseBlock = (blockText) => {
     return { rawLabel, type: 'empty' };
   }
 
-  // FIX: conserver les lignes brutes AVANT filtrage pour récupérer "Bilan ..."
   const allDataLines = lines.filter(l => {
     const t = l.trim();
     return t && !/^===/.test(t) && !/^Resultats\s*\(/.test(t) && !/^Aucun/.test(t);
   });
 
-  // Ligne résumé bilan (ex: "Bilan Nadia Hamdi : 2j approuves | 2j en attente")
   const bilanLine = allDataLines.find(l => /^Bilan\s/i.test(l.trim()))?.trim() || null;
 
   const dataLines = allDataLines.filter(l => {
     const t = l.trim();
     if (/^Total\s/i.test(t)) return false;
     if (/^Repartition:/i.test(t)) return false;
-    if (/^Bilan\s/i.test(t)) return false; // FIX: exclure des dataLines
+    if (/^Bilan\s/i.test(t)) return false;
     return true;
   });
 
@@ -267,7 +267,6 @@ const parseBlock = (blockText) => {
   }
 
   const rows = dataLines.map(parsePipeLine).filter(Boolean);
-  // FIX: inclure bilanLine dans le résultat parsé
   return { rawLabel, type: 'rows', count: count ?? rows.length, rows, bilanLine };
 };
 
@@ -674,7 +673,7 @@ const StatsSummaryBlock = ({ stats, C }) => {
 };
 
 // ═══════════════════════════════════════════════════════
-// BLOCK RENDERER — FIX: affiche bilanLine pour LEAVE-REQUESTS
+// BLOCK RENDERER
 // ═══════════════════════════════════════════════════════
 const BlockRenderer = ({ block, darkMode, C }) => {
   const canonicalLabel = normalizeLabel(block.rawLabel);
@@ -747,7 +746,7 @@ const BlockRenderer = ({ block, darkMode, C }) => {
 
   if (block.type === 'rows') {
     const rows = block.rows;
-    const bilanLine = block.bilanLine || null; // FIX: récupérer la ligne résumé
+    const bilanLine = block.bilanLine || null;
 
     const renderRow = (row, i) => {
       if (canonicalLabel === 'EMPLOYEES')        return <EmployeeCard key={i} row={row} C={C} />;
@@ -766,28 +765,18 @@ const BlockRenderer = ({ block, darkMode, C }) => {
     return (
       <div style={{ marginBottom: 8 }}>
         {header(rows.length)}
-
-        {/* FIX: bandeau résumé bilan congés */}
         {bilanLine && canonicalLabel === 'LEAVE-REQUESTS' && (
           <div style={{
-            padding: '8px 14px',
-            marginBottom: 8,
-            borderRadius: 8,
-            backgroundColor: 'rgba(244,63,94,0.08)',
-            border: '1px solid rgba(244,63,94,0.2)',
-            fontSize: 12.5,
-            fontWeight: 600,
-            color: '#f43f5e',
+            padding: '8px 14px', marginBottom: 8, borderRadius: 8,
+            backgroundColor: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)',
+            fontSize: 12.5, fontWeight: 600, color: '#f43f5e',
             fontFamily: "'Instrument Sans',sans-serif",
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
+            display: 'flex', alignItems: 'center', gap: 6,
           }}>
             <CalendarOff size={13} strokeWidth={2} />
             {bilanLine}
           </div>
         )}
-
         <div style={{ display: 'grid', gridTemplateColumns: isGrid ? 'repeat(2,1fr)' : '1fr', gap: 6 }}>
           {rows.map((row, i) => renderRow(row, i))}
         </div>
@@ -882,7 +871,6 @@ const getUserFromJWT = () => {
   if (token) {
     const p = decodeJWT(token);
     if (p) {
-      // Convert "nadia.hamdi" → "Nadia Hamdi"
       const name = (p.name || p.sub || 'Utilisateur')
         .split('.')
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
@@ -897,31 +885,46 @@ const getUserFromJWT = () => {
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════
 const AIAssistant = ({ onClose, user: userProp }) => {
-const [conversations, setConversations] = useState(() => {
-  try {
-    const userId = getUserId();
-    const saved = localStorage.getItem(`erp_chat_conversations_${userId}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed?.length) return parsed;
-    }
-  } catch {}
-  return [makeNewConversation()];
-});
 
-const [activeConvId, setActiveConvId] = useState(() => {
-  try {
-    const userId = getUserId();
-    const saved = localStorage.getItem(`erp_chat_conversations_${userId}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed?.length) return parsed[0].id;
-    }
-  } catch {}
-  return conversations?.[0]?.id ?? Date.now();
-});
-  const activeConv  = conversations.find(c => c.id === activeConvId);
-  const messages    = activeConv?.messages || [];
+  // ── FIX 1: load from user-scoped key, default to first saved conversation ──
+  const [conversations, setConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    } catch {}
+    return [makeNewConversation()];
+  });
+
+  // ── FIX 2: restore last active conversation id, not always the first ───────
+  const [activeConvId, setActiveConvId] = useState(() => {
+    try {
+      // Try to restore the last-active conversation
+      const lastActive = localStorage.getItem(getActiveKey());
+      if (lastActive) {
+        // Verify it still exists in the saved conversations
+        const saved = localStorage.getItem(getStorageKey());
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.some(c => String(c.id) === lastActive)) {
+            return parseInt(lastActive) || lastActive;
+          }
+        }
+      }
+      // Fallback: first conversation in the list
+      const saved = localStorage.getItem(getStorageKey());
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) return parsed[0].id;
+      }
+    } catch {}
+    return conversations[0]?.id ?? Date.now();
+  });
+
+  const activeConv = conversations.find(c => c.id === activeConvId);
+  const messages   = activeConv?.messages || [];
 
   const [input, setInput]               = useState('');
   const [isTyping, setIsTyping]         = useState(false);
@@ -933,12 +936,19 @@ const [activeConvId, setActiveConvId] = useState(() => {
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [micError, setMicError]         = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  useEffect(() => {
-  try {
-    localStorage.setItem('erp_chat_conversations', JSON.stringify(conversations));
 
-  } catch {}
-}, [conversations]);
+  // ── FIX 3: save to user-scoped key AND persist active conv id ───────────────
+  useEffect(() => {
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(conversations));
+    } catch {}
+  }, [conversations]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(getActiveKey(), String(activeConvId));
+    } catch {}
+  }, [activeConvId]);
 
   const messagesEndRef  = useRef(null);
   const fileInputRef    = useRef(null);
@@ -1059,8 +1069,7 @@ const [activeConvId, setActiveConvId] = useState(() => {
         .conv-item:hover .del-btn{opacity:1!important}
         .del-btn{opacity:0;transition:opacity .13s;background:none;border:none;cursor:pointer;padding:3px;border-radius:5px;display:flex;align-items:center;color:${C.textMuted}}
         .del-btn:hover{color:#f87171!important;background:rgba(239,68,68,0.1)!important}
-        .pill{transition:all .18s;cursor:pointer}
-        .pill { cursor: default !important; }  /* supprimer le hover actif */
+        .pill{cursor:default!important;user-select:none}
         .icon-btn{transition:all .15s;cursor:pointer;background:none;border:none;border-radius:9px;padding:9px;display:flex;align-items:center}
         .icon-btn:hover{background:${C.accentSubtle}!important;color:${C.accentText}!important}
         .send-btn{transition:all .2s cubic-bezier(.34,1.56,.64,1)}
@@ -1212,22 +1221,10 @@ const [activeConvId, setActiveConvId] = useState(() => {
               </span>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {SUGGESTIONS.map(s => (
-                  <span key={s} className="pill" style={{
-                    backgroundColor: C.accentSubtle,
-                    color: C.accentText,
-                    border: `1px solid ${C.accent}25`,
-                    borderRadius: 20,
-                    padding: '5px 13px',
-                    fontFamily: "'Instrument Sans',sans-serif",
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    cursor: 'default',        // ← plus de pointer
-                    userSelect: 'none',       // ← pas sélectionnable
-                    display: 'inline-block',
-  }}>
-    {s}
-  </span>
-))}
+                  <span key={s} className="pill" style={{ backgroundColor:C.accentSubtle, color:C.accentText, border:`1px solid ${C.accent}25`, borderRadius:20, padding:'5px 13px', fontFamily:"'Instrument Sans',sans-serif", fontSize:12.5, fontWeight:500, display:'inline-block' }}>
+                    {s}
+                  </span>
+                ))}
               </div>
             </div>
           </div>

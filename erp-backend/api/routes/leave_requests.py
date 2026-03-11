@@ -111,6 +111,8 @@ def create_leave_request(leave_request: LeaveRequestCreate, user: dict = Depends
             remaining = emp_leave["annual_leave_total"] - emp_leave["annual_leave_taken"]
             if leave_request.total_days > remaining:
                 raise HTTPException(status_code=400, detail=f"Insufficient annual leave. Remaining: {remaining} days")
+
+    # ── INSERT leave request FIRST ────────────────────────────────────────────
     cursor.execute("""
         INSERT INTO leave_requests (request_id, employee_id, employee_name, leave_type, start_date, end_date,
             total_days, reason, status, requested_date)
@@ -120,6 +122,8 @@ def create_leave_request(leave_request: LeaveRequestCreate, user: dict = Depends
         leave_request.leave_type, leave_request.start_date, leave_request.end_date,
         leave_request.total_days, leave_request.reason, datetime.now().isoformat()
     ))
+
+    # ── Notify approver ───────────────────────────────────────────────────────
     cursor.execute("SELECT role, manager_id FROM employees WHERE employee_id = ?", (leave_request.employee_id,))
     requester = cursor.fetchone()
     approver_id = None
@@ -131,22 +135,45 @@ def create_leave_request(leave_request: LeaveRequestCreate, user: dict = Depends
             ceo = cursor.fetchone()
             if ceo:
                 approver_id = ceo["employee_id"]
+
+    notif_message = (
+        f"{leave_request.employee_name} a demandé {leave_request.total_days} jour(s) "
+        f"({leave_request.leave_type}) du {leave_request.start_date} au {leave_request.end_date}"
+    )
+
     if approver_id:
-        notification_id = f"NOT{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
         cursor.execute("""
-            INSERT INTO notifications (notification_id, user_id, notification_type, title, message,
+            INSERT INTO notifications (notification_id, user_id, type, title, message,
                 priority, is_read, created_date, related_entity_type, related_entity_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            notification_id, approver_id, 'Leave', 'Nouvelle demande de congé',
-            f"{leave_request.employee_name} a demandé {leave_request.total_days} jour(s) ({leave_request.leave_type}) "
-            f"du {leave_request.start_date} au {leave_request.end_date}",
-            'High', 0, datetime.now().isoformat(), 'leave_request', leave_request.request_id
+            f"NOT{datetime.now().strftime('%Y%m%d%H%M%S%f')}",
+            approver_id, 'Leave', '📋 Nouvelle demande de congé',
+            notif_message, 'High', 0, datetime.now().isoformat(),
+            'leave_request', leave_request.request_id
         ))
+
+    # ── Always notify RH ──────────────────────────────────────────────────────
+    cursor.execute("SELECT employee_id FROM employees WHERE role = 'rh' LIMIT 1")
+    rh = cursor.fetchone()
+    if rh and rh["employee_id"] != approver_id:
+        cursor.execute("""
+            INSERT INTO notifications (notification_id, user_id, type, title, message,
+                priority, is_read, created_date, related_entity_type, related_entity_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            f"NOT{datetime.now().strftime('%Y%m%d%H%M%S%f')}R",
+            rh["employee_id"], 'Leave', '📋 Nouvelle demande de congé',
+            notif_message, 'High', 0, datetime.now().isoformat(),
+            'leave_request', leave_request.request_id
+        ))
+
+    log_action(cursor, user["employee_id"], "Create", "LeaveRequest", leave_request.request_id,
+               f"Submitted leave request: {leave_request.leave_type} {leave_request.total_days}j")
     db.commit()
+
     cursor.execute("SELECT * FROM leave_requests WHERE request_id = ?", (leave_request.request_id,))
     return dict(cursor.fetchone())
-
 
 @router.put("/{request_id}/approve", response_model=LeaveRequest)
 def approve_leave_request(request_id: str, review_comment: Optional[str] = None,

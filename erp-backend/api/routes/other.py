@@ -9,7 +9,7 @@ from core.database import get_db
 from core.auth import authenticate_with_token, check_edit_permission, get_accessible_projects, log_action
 from core.models import (
     Issue, IssueCreate, IssueUpdate,
-    Equipment, EquipmentCreate, EquipmentUpdate,
+    Equipment, EquipmentCreate, EquipmentUpdate, ReportCreate,
     Supplier, SupplierCreate, SupplierUpdate,
     PurchaseOrder, PurchaseOrderCreate, PurchaseOrderUpdate,
     Timesheet, TimesheetCreate, TimesheetUpdate, TimesheetSummary,
@@ -695,10 +695,95 @@ reports_router = APIRouter(prefix="/reports", tags=["Reports"])
 def get_reports(user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
     cursor = db.cursor()
     if user["role"] == "ceo":
-        cursor.execute("SELECT * FROM reports ORDER BY generation_date DESC")
+        cursor.execute("""
+            SELECT r.*, e.first_name || ' ' || e.last_name as generated_by_name
+            FROM reports r
+            LEFT JOIN employees e ON r.generated_by = e.employee_id
+            ORDER BY r.generation_date DESC
+        """)
     elif user["role"] == "manager":
-        cursor.execute("SELECT * FROM reports WHERE generated_by = ? ORDER BY generation_date DESC",
-                       (user["employee_id"],))
+        cursor.execute("""
+            SELECT r.*, e.first_name || ' ' || e.last_name as generated_by_name
+            FROM reports r
+            LEFT JOIN employees e ON r.generated_by = e.employee_id
+            WHERE r.generated_by = ?
+            ORDER BY r.generation_date DESC
+        """, (user["employee_id"],))
     else:
         raise HTTPException(status_code=403, detail="Accès aux rapports refusé")
     return [dict(r) for r in cursor.fetchall()]
+
+
+@reports_router.get("/{report_id}")
+def get_report(report_id: str, user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
+    if user["role"] not in ("ceo", "manager"):
+        raise HTTPException(status_code=403, detail="Accès aux rapports refusé")
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT r.*, e.first_name || ' ' || e.last_name as generated_by_name
+        FROM reports r
+        LEFT JOIN employees e ON r.generated_by = e.employee_id
+        WHERE r.report_id = ?
+    """, (report_id,))
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if user["role"] == "manager" and dict(row)["generated_by"] != user["employee_id"]:
+        raise HTTPException(status_code=403, detail="Accès refusé")
+    return dict(row)
+
+
+@reports_router.post("/generate", status_code=status.HTTP_201_CREATED)
+def generate_report(
+        report: ReportCreate,
+        user: dict = Depends(authenticate_with_token),
+        db=Depends(get_db)
+):
+    if user["role"] not in ("ceo", "manager"):
+        raise HTTPException(status_code=403, detail="Accès aux rapports refusé")
+
+    cursor = db.cursor()
+    report_id = f"RPT{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    report_title = report.title or f"Rapport {report.report_type} — {datetime.now().strftime('%Y-%m-%d')}"
+
+    cursor.execute("""
+        INSERT INTO reports (report_id, report_type, title, period_start, period_end,
+            generated_by, generation_date, file_path, filters, parameters, status, content)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        report_id, report.report_type, report_title,
+        report.period_start, report.period_end,
+        user["employee_id"], datetime.now().isoformat(),
+        None, report.filters or "{}", report.parameters or "{}",
+        "Completed", ""
+    ))
+
+    log_action(cursor, user["employee_id"], "Create", "Report", report_id,
+               f"Generated report: {report_title}")
+    db.commit()
+
+    cursor.execute("""
+        SELECT r.*, e.first_name || ' ' || e.last_name as generated_by_name
+        FROM reports r
+        LEFT JOIN employees e ON r.generated_by = e.employee_id
+        WHERE r.report_id = ?
+    """, (report_id,))
+    row = cursor.fetchone()
+    return dict(row) if row else {"report_id": report_id, "status": "Completed"}
+
+
+@reports_router.delete("/{report_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_report(report_id: str, user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
+    if user["role"] not in ("ceo", "manager"):
+        raise HTTPException(status_code=403, detail="Accès aux rapports refusé")
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM reports WHERE report_id = ?", (report_id,))
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if user["role"] == "manager" and dict(row)["generated_by"] != user["employee_id"]:
+        raise HTTPException(status_code=403, detail="Accès refusé — vous ne pouvez supprimer que vos propres rapports")
+    cursor.execute("DELETE FROM reports WHERE report_id = ?", (report_id,))
+    log_action(cursor, user["employee_id"], "Delete", "Report", report_id, f"Deleted report {report_id}")
+    db.commit()
+    return None

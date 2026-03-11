@@ -541,3 +541,11 @@ class Report(BaseModel):
     parameters: Optional[str]
     status: str
     content: Optional[str] = None
+    
+class ReportCreate(BaseModel):
+    report_type: str
+    title: Optional[str] = None
+    period_start: Optional[str] = None
+    period_end: Optional[str] = None
+    filters: Optional[str] = "{}"
+    parameters: Optional[str] = "{}"

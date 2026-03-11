@@ -40,7 +40,9 @@ const Tasks = () => {
     estimated_hours: ''
   });
 
+  // ── Rôles ────────────────────────────────────────────────────────────────
   const isEmployee = user?.role === 'employee';
+  const isManager  = user?.role === 'manager';   // ← FIX : scope manager
 
   const getAuthHeaders = () => ({
     'Content-Type': 'application/json',
@@ -63,10 +65,18 @@ const Tasks = () => {
     try {
       setLoading(true);
 
-      // ✅ Employees can only see their own tasks — enforce on frontend too
       const activeFilters = { ...filters };
+
+      // ✅ Employee : uniquement ses propres tâches
       if (isEmployee) {
         activeFilters.assigned_to = user.employee_id;
+      }
+
+      // ✅ FIX — Manager : uniquement les tâches de son équipe
+      // Le backend interprète supervised_by comme un filtre virtuel
+      // et renvoie les tâches des employés supervisés par ce manager.
+      if (isManager) {
+        activeFilters.supervised_by = user.employee_id;
       }
 
       const queryParams = new URLSearchParams(
@@ -96,9 +106,12 @@ const Tasks = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('http://localhost:8000/employees', {
-        headers: getAuthHeaders()
-      });
+      // ✅ FIX — Manager ne voit que les employés de son équipe
+      const url = isManager
+        ? `http://localhost:8000/employees?supervised_by=${user.employee_id}`
+        : 'http://localhost:8000/employees';
+
+      const response = await fetch(url, { headers: getAuthHeaders() });
       if (response.ok) {
         const data = await response.json();
         setEmployees(data);
@@ -324,13 +337,16 @@ const Tasks = () => {
             ))}
           </select>
 
-          {/* ✅ Hide employee filter from employees */}
+          {/* ✅ Hide employee filter from employees
+              ✅ FIX — Manager voit seulement les employés de son équipe (déjà filtré via fetchEmployees) */}
           {!isEmployee && (
             <select
               value={filters.assigned_to}
               onChange={(e) => setFilters({...filters, assigned_to: e.target.value})}
             >
-              <option value="">Tous les employés</option>
+              <option value="">
+                {isManager ? 'Toute mon équipe' : 'Tous les employés'}
+              </option>
               {employees.map(emp => (
                 <option key={emp.employee_id} value={emp.employee_id}>
                   {emp.first_name} {emp.last_name}
@@ -398,7 +414,7 @@ const Tasks = () => {
                     )}
                   </div>
 
-                  {/* ✅ Employees can only update their own task status */}
+                  {/* ✅ Status buttons — employees limited to their own tasks (scope enforced above) */}
                   <div className="status-buttons">
                     {status !== 'Todo' && (
                       <button onClick={() => handleStatusChange(task.task_id, 'Todo')}>

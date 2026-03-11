@@ -86,15 +86,18 @@ def check_edit_permission(user: dict):
 def get_accessible_projects(user: dict, db):
     if user["role"] == "ceo":
         return None
-    accessible_projects = set(user["assigned_projects"] or [])
+    cursor = db.cursor()
     if user["role"] == "manager":
-        cursor = db.cursor()
-        for emp_id in user["supervised_employees"]:
-            cursor.execute("SELECT assigned_projects FROM employees WHERE employee_id = ?", (emp_id,))
-            result = cursor.fetchone()
-            if result and result["assigned_projects"]:
-                accessible_projects.update([p for p in result["assigned_projects"].split(";") if p])
-    return list(accessible_projects)
+        team = user["supervised_employees"] + [user["employee_id"]]
+        placeholders = ','.join(['?' for _ in team])
+        # Derive from actual task assignments — never stale
+        cursor.execute(
+            f"SELECT DISTINCT project_id FROM tasks WHERE assigned_to IN ({placeholders})",
+            team
+        )
+        return [row["project_id"] for row in cursor.fetchall()]
+    # employee: use their own assigned_projects
+    return user["assigned_projects"] or []
 
 
 def sync_project_assignments(project: dict, db):
