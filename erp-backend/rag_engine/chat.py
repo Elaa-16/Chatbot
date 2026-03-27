@@ -1,13 +1,3 @@
-"""
-Construction ERP RAG Engine v31
-================================
-Migration v30→v31:
-  - MIGRATION: OllamaLLM → Groq API (llama-3.3-70b-versatile)
-  - Embeddings restent locaux via OllamaEmbeddings (mxbai-embed-large)
-  - planner_chain / answer_chain / rag_doc_chain remplacés par _call_groq()
-  - Tous les fixes v30 conservés (v27, v28, v29, v30)
-"""
-
 import logging
 import json
 import os
