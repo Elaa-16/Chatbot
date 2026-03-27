@@ -1,0 +1,26 @@
+employee_id,username,first_name,last_name,email,phone,position,department,role,hire_date,salary,manager_id,supervised_employees,assigned_projects,specialization,certifications,years_experience
+E001,ahmed.trabelsi,Ahmed,Trabelsi,ahmed.trabelsi@construction-tn.com,+216 20 123 456,CEO,Executive,ceo,2015-01-10,15000,,E002;E003;E004;E005;E020,,Strategic Management,MBA - PMP,25
+E002,leila.bensalem,Leila,Ben Salem,leila.bensalem@construction-tn.com,+216 22 234 567,Chief Financial Officer,Finance,manager,2016-03-15,12000,E001,E006;E009;E024,,Financial Management,CPA - CFA,20
+E003,karim.jebali,Karim,Jebali,karim.jebali@construction-tn.com,+216 23 345 678,Chief Projects Officer,Projects,manager,2016-06-01,11000,E001,E007;E008;E010;E015,P001;P002;P005;P009;P012;P015;P018,Civil Engineering,PMP - CEng,18
+E004,fatma.gharbi,Fatma,Gharbi,fatma.gharbi@construction-tn.com,+216 24 456 789,Chief HR Officer,Human Resources,manager,2017-02-20,10000,E001,E013;E014,,Human Resources,SHRM-SCP,16
+E005,mohamed.khelifi,Mohamed,Khelifi,mohamed.khelifi@construction-tn.com,+216 25 567 890,Chief Operations Officer,Operations,manager,2016-09-10,11500,E001,E017;E018;E019;E025,,Operations Management,Six Sigma Black Belt,19
+E006,amira.nasri,Amira,Nasri,amira.nasri@construction-tn.com,+216 26 678 901,Financial Controller,Finance,employee,2018-05-12,7500,E002,,,Accounting,CPA,12
+E007,youssef.mansour,Youssef,Mansour,youssef.mansour@construction-tn.com,+216 27 789 012,Site Engineer,Projects,employee,2019-03-15,5500,E003,,P001;P005;P012;P018,Civil Engineering,PE - LEED AP,9
+E008,salma.bouaziz,Salma,Bouaziz,salma.bouaziz@construction-tn.com,+216 28 890 123,Senior Engineer,Projects,employee,2018-11-20,6500,E003,,P002;P009;P014,Structural Engineering,SE - PMP,11
+E009,hichem.zarrouk,Hichem,Zarrouk,hichem.zarrouk@construction-tn.com,+216 29 901 234,Accountant,Finance,employee,2020-01-15,4800,E002,,,Financial Accounting,ACCA,7
+E010,nadia.hamdi,Nadia,Hamdi,nadia.hamdi@construction-tn.com,+216 30 012 345,Project Manager,Projects,manager,2017-08-01,8500,E003,E011;E012,P003;P004;P007;P011;P014;P017;P020,Project Management,PMP - PRINCE2,14
+E011,rami.ferchichi,Rami,Ferchichi,rami.ferchichi@construction-tn.com,+216 31 123 456,Construction Supervisor,Projects,employee,2019-06-10,6000,E010,,P003;P007;P011;P017;P020,Construction Management,OSHA - CSM,10
+E012,sonia.mejri,Sonia,Mejri,sonia.mejri@construction-tn.com,+216 32 234 567,Site Supervisor,Projects,employee,2020-08-15,5200,E010,,P004;P010;P015;P019,Site Management,SafetyTech - CSP,6
+E013,tarek.bouslama,Tarek,Bouslama,tarek.bouslama@construction-tn.com,+216 33 345 678,HR Manager,Human Resources,employee,2019-01-20,6500,E004,,,Talent Management,PHR - SHRM-CP,8
+E014,mariem.chakroun,Mariem,Chakroun,mariem.chakroun@construction-tn.com,+216 34 456 789,Recruiter,Human Resources,employee,2021-03-10,4200,E004,,,Recruitment,AIRS - LinkedIn Certified,5
+E015,amine.saidi,Amine,Saidi,amine.saidi@construction-tn.com,+216 35 567 890,Project Manager,Projects,manager,2018-04-15,8200,E003,E016;E023,P006;P008;P010;P013;P016;P019,Architecture,RIBA - LEED AP,13
+E016,hela.dridi,Hela,Dridi,hela.dridi@construction-tn.com,+216 36 678 901,Architect,Projects,employee,2020-05-20,5800,E015,,P005;P006;P008;P010;P011;P013;P015;P016;P019,Architectural Design,RIBA Part 3,7
+E017,bilel.ltaief,Bilel,Ltaief,bilel.ltaief@construction-tn.com,+216 37 789 012,Quality Manager,Operations,employee,2019-09-01,7200,E005,,P001;P007;P018,Quality Management,CQM - ISO Lead Auditor,9
+E018,asma.benyoussef,Asma,Ben Youssef,asma.benyoussef@construction-tn.com,+216 38 890 123,Procurement Manager,Operations,employee,2018-07-10,7000,E005,,P014;P020,Supply Chain,CPSM - CSCP,11
+E019,fares.ghanmi,Fares,Ghanmi,fares.ghanmi@construction-tn.com,+216 39 901 234,Safety Officer,Operations,employee,2020-11-15,5500,E005,,P003;P008;P017,Health & Safety,NEBOSH - IOSH,6
+E020,nesrine.karoui,Nesrine,Karoui,nesrine.karoui@construction-tn.com,+216 40 012 345,IT Manager,IT,manager,2019-12-01,7800,E001,E021,,IT Infrastructure,CISSP - AWS Certified,10
+E021,slim.oueslati,Slim,Oueslati,slim.oueslati@construction-tn.com,+216 41 123 456,Systems Administrator,IT,employee,2021-02-15,5000,E020,,P012,System Administration,MCSA - Linux+,5
+E022,ines.hammami,Ines,Hammami,ines.hammami@construction-tn.com,+216 42 234 567,Junior Engineer,Projects,employee,2022-06-01,4000,E008,,P002;P009,Civil Engineering,EIT,3
+E023,mehdi.abidi,Mehdi,Abidi,mehdi.abidi@construction-tn.com,+216 43 345 678,Junior Architect,Projects,employee,2022-09-15,3800,E016,,P006;P013;P016,Architecture,RIBA Part 2,2
+E024,wafa.slimani,Wafa,Slimani,wafa.slimani@construction-tn.com,+216 44 456 789,Budget Analyst,Finance,employee,2021-05-10,4500,E002,,,Financial Analysis,CFA Level 1,4
+E025,khaled.jomaa,Khaled,Jomaa,khaled.jomaa@construction-tn.com,+216 45 567 890,Logistics Coordinator,Operations,employee,2021-08-20,4300,E018,,P020,Logistics,CLTD,4

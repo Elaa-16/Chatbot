@@ -1,0 +1,265 @@
+kpi_id,project_id,project_name,kpi_date,budget_variance_percentage,schedule_variance_days,quality_score,safety_incidents,client_satisfaction_score,team_productivity_percentage,cost_performance_index,schedule_performance_index,risk_level
+KPI001,P001,Résidence Les Palmiers,2025-01-31,0.0,-10,92,1,4.5,88,1.0,1.05,Medium
+KPI002,P002,Centre Commercial Carthage,2025-01-31,0.7,15,95,0,4.8,92,0.99,0.95,Low
+KPI003,P003,Hôpital Régional Sfax,2025-01-31,-1.3,5,89,2,4.2,85,1.01,0.98,High
+KPI004,P004,Complexe Sportif Sousse,2025-01-31,1.1,20,87,1,4.0,82,0.99,0.92,Medium
+KPI005,P005,Tour de Bureaux Lac 2,2024-11-30,-4.4,0,98,0,5.0,95,1.05,1.00,Low
+KPI006,P006,Villa Privée Gammarth,2025-01-31,-0.9,-5,90,0,4.6,86,1.01,1.02,Low
+KPI007,P007,Usine Agroalimentaire,2025-01-31,-0.5,10,91,1,4.3,87,1.0,0.96,Medium
+KPI008,P008,École Primaire Manouba,2025-01-31,-0.8,0,93,0,4.7,90,1.01,1.00,Low
+KPI009,P009,Pont Autoroutier A1,2025-01-31,0.8,30,88,3,3.8,83,0.99,0.90,High
+KPI010,P010,Rénovation Médina Kairouan,2025-01-31,2.0,-8,94,0,4.9,89,0.98,1.04,Medium
+KPI011,P011,Hôtel 5 Étoiles Djerba,2025-01-31,0.0,12,90,2,4.4,88,1.0,0.94,Medium
+KPI012,P012,Parking Multi-Étages Centre-Ville,2025-01-31,1.2,-15,91,1,4.5,85,0.99,1.08,Low
+KPI013,P013,Résidence Universitaire,2024-10-31,-1.5,5,96,0,4.9,94,1.01,0.97,Low
+KPI014,P014,Entrepôt Logistique Radès,2025-01-31,-0.8,8,92,1,4.6,90,1.01,0.95,Low
+KPI015,P015,Centre Culturel Monastir,2025-01-31,4.2,0,85,0,4.0,78,0.96,1.00,High
+KPI016,P016,Immeuble Résidentiel Nabeul,2025-01-31,0.7,3,93,0,4.7,91,0.99,0.98,Low
+KPI017,P017,Station d'Épuration,2025-01-31,-0.3,18,89,2,4.1,86,1.0,0.93,Medium
+KPI018,P018,Complexe Administratif,2025-01-31,0.3,-5,92,1,4.5,89,1.0,1.02,Medium
+KPI019,P019,Mosquée Communautaire,2025-01-31,-0.4,2,94,0,4.8,92,1.0,0.99,Low
+KPI020,P020,Parc Industriel,2025-01-31,0.5,25,87,4,3.9,84,0.99,0.91,High
+KPI021,P001,Résidence Les Palmiers,2024-12-31,0.0,-12,91,2,4.4,86,1.0,1.06,Medium
+KPI022,P002,Centre Commercial Carthage,2024-12-31,0.7,12,94,0,4.7,91,0.99,0.96,Low
+KPI023,P003,Hôpital Régional Sfax,2024-12-31,-1.3,3,88,3,4.1,83,1.01,0.99,High
+KPI024,P004,Complexe Sportif Sousse,2024-12-31,1.1,22,86,2,3.9,80,0.99,0.91,Medium
+KPI025,P006,Villa Privée Gammarth,2024-12-31,-0.9,-8,89,0,4.5,84,1.01,1.04,Low
+KPI026,P007,Usine Agroalimentaire,2024-12-31,-0.5,12,90,1,4.2,86,1.0,0.95,Medium
+KPI027,P008,École Primaire Manouba,2024-12-31,-0.8,2,92,0,4.6,89,1.01,0.99,Low
+KPI028,P009,Pont Autoroutier A1,2024-12-31,0.8,32,87,4,3.7,81,0.99,0.89,High
+KPI029,P010,Rénovation Médina Kairouan,2024-12-31,2.0,-10,93,0,4.8,88,0.98,1.05,Medium
+KPI030,P011,Hôtel 5 Étoiles Djerba,2024-12-31,0.0,14,89,3,4.3,87,1.0,0.93,Medium
+KPI031,P001,Résidence Les Palmiers,2025-02-28,0.07,-9,92.0,0,4.4,88.2,0.996,1.056,Low
+KPI032,P001,Résidence Les Palmiers,2025-03-31,0.14,-8,92.0,0,4.4,88.9,0.994,1.057,Low
+KPI033,P001,Résidence Les Palmiers,2025-04-30,0.23,-6,92.2,0,4.3,88.7,0.991,1.058,Low
+KPI034,P001,Résidence Les Palmiers,2025-05-31,0.33,-5,92.5,0,4.2,88.1,0.99,1.068,Low
+KPI035,P001,Résidence Les Palmiers,2025-06-30,0.28,-4,92.7,0,4.1,88.5,0.982,1.074,Low
+KPI036,P001,Résidence Les Palmiers,2025-07-31,0.31,-3,92.8,0,4.1,88.7,0.98,1.076,Low
+KPI037,P001,Résidence Les Palmiers,2025-08-31,0.36,-2,92.7,0,4.2,88.3,0.975,1.08,Low
+KPI038,P001,Résidence Les Palmiers,2025-09-30,0.39,-1,93.3,0,4.2,87.8,0.969,1.071,Low
+KPI039,P001,Résidence Les Palmiers,2025-10-31,0.52,-2,93.2,0,4.2,88.1,0.966,1.074,Low
+KPI040,P001,Résidence Les Palmiers,2025-11-30,0.72,-1,93.6,0,4.2,88.2,0.97,1.067,Low
+KPI041,P001,Résidence Les Palmiers,2025-12-31,0.76,0,93.4,1,4.2,88.8,0.958,1.064,Low
+KPI042,P001,Résidence Les Palmiers,2026-01-31,0.84,1,93.8,0,4.2,88.5,0.953,1.07,Low
+KPI043,P001,Résidence Les Palmiers,2026-02-28,0.88,2,93.7,0,4.2,89.1,0.939,1.068,Medium
+KPI044,P002,Centre Commercial Carthage,2025-02-28,0.79,17,95.0,0,4.8,91.2,0.989,0.942,Medium
+KPI045,P002,Centre Commercial Carthage,2025-03-31,0.94,18,95.2,0,4.8,91.4,0.989,0.938,Medium
+KPI046,P002,Centre Commercial Carthage,2025-04-30,1.14,21,95.0,0,4.8,91.4,0.981,0.936,Medium
+KPI047,P002,Centre Commercial Carthage,2025-05-31,1.38,23,94.9,0,4.8,91.3,0.976,0.932,Medium
+KPI048,P002,Centre Commercial Carthage,2025-06-30,1.44,25,94.3,0,4.8,91.8,0.97,0.917,Medium
+KPI049,P002,Centre Commercial Carthage,2025-07-31,1.7,26,94.2,0,4.8,91.6,0.965,0.901,Medium
+KPI050,P002,Centre Commercial Carthage,2025-08-31,1.81,28,94.2,1,4.7,91.4,0.961,0.894,Medium
+KPI051,P002,Centre Commercial Carthage,2025-09-30,1.97,32,94.2,0,4.8,91.5,0.957,0.885,High
+KPI052,P002,Centre Commercial Carthage,2025-10-31,2.15,33,93.7,0,4.8,91.7,0.95,0.879,High
+KPI053,P002,Centre Commercial Carthage,2025-11-30,2.25,35,93.8,0,4.8,91.3,0.944,0.864,High
+KPI054,P002,Centre Commercial Carthage,2025-12-31,2.43,37,93.9,0,4.8,91.7,0.942,0.851,High
+KPI055,P002,Centre Commercial Carthage,2026-01-31,2.49,40,94.5,0,4.8,92.8,0.935,0.842,High
+KPI056,P002,Centre Commercial Carthage,2026-02-28,2.62,42,94.8,0,4.8,93.0,0.935,0.835,High
+KPI057,P003,Hôpital Régional Sfax,2025-02-28,-1.26,7,89.9,0,4.2,84.3,1.007,0.979,Low
+KPI058,P003,Hôpital Régional Sfax,2025-03-31,-1.24,7,89.7,0,4.2,84.1,1.022,0.972,Low
+KPI059,P003,Hôpital Régional Sfax,2025-04-30,-1.29,7,89.9,0,4.2,83.5,1.031,0.981,Low
+KPI060,P003,Hôpital Régional Sfax,2025-05-31,-1.28,9,90.3,0,4.2,83.1,1.04,0.979,Low
+KPI061,P003,Hôpital Régional Sfax,2025-06-30,-1.35,9,90.3,0,4.3,82.9,1.044,0.985,Low
+KPI062,P003,Hôpital Régional Sfax,2025-07-31,-1.34,10,90.6,0,4.3,82.9,1.044,0.966,Low
+KPI063,P003,Hôpital Régional Sfax,2025-08-31,-1.3,12,90.5,0,4.3,83.3,1.054,0.957,Low
+KPI064,P003,Hôpital Régional Sfax,2025-09-30,-1.32,14,90.5,0,4.3,84.0,1.055,0.964,Low
+KPI065,P003,Hôpital Régional Sfax,2025-10-31,-1.25,15,90.4,0,4.4,83.9,1.062,0.966,Low
+KPI066,P003,Hôpital Régional Sfax,2025-11-30,-1.23,15,90.1,0,4.4,84.2,1.07,0.972,Low
+KPI067,P003,Hôpital Régional Sfax,2025-12-31,-1.09,16,90.1,1,4.3,84.1,1.069,0.967,Medium
+KPI068,P003,Hôpital Régional Sfax,2026-01-31,-1.04,14,90.0,0,4.3,84.4,1.068,0.963,Low
+KPI069,P003,Hôpital Régional Sfax,2026-02-28,-0.96,14,90.0,0,4.3,84.6,1.073,0.959,Low
+KPI070,P004,Complexe Sportif Sousse,2025-02-28,1.2,22,86.7,0,4.1,81.9,0.982,0.919,Medium
+KPI071,P004,Complexe Sportif Sousse,2025-03-31,1.48,25,86.9,0,4.0,82.0,0.97,0.919,Medium
+KPI072,P004,Complexe Sportif Sousse,2025-04-30,1.64,29,86.7,0,4.0,81.5,0.97,0.911,Medium
+KPI073,P004,Complexe Sportif Sousse,2025-05-31,1.85,31,86.4,0,4.1,81.9,0.967,0.901,High
+KPI074,P004,Complexe Sportif Sousse,2025-06-30,2.04,31,86.2,0,4.2,82.8,0.969,0.879,High
+KPI075,P004,Complexe Sportif Sousse,2025-07-31,2.28,34,86.2,0,4.2,82.3,0.967,0.872,High
+KPI076,P004,Complexe Sportif Sousse,2025-08-31,2.44,36,86.2,0,4.3,82.0,0.959,0.862,High
+KPI077,P004,Complexe Sportif Sousse,2025-09-30,2.64,37,86.1,0,4.3,81.6,0.952,0.853,High
+KPI078,P004,Complexe Sportif Sousse,2025-10-31,2.93,39,86.3,0,4.3,81.9,0.95,0.839,High
+KPI079,P004,Complexe Sportif Sousse,2025-11-30,3.2,41,86.2,0,4.4,82.3,0.95,0.825,High
+KPI080,P004,Complexe Sportif Sousse,2025-12-31,3.4,43,86.3,0,4.4,82.9,0.94,0.81,High
+KPI081,P004,Complexe Sportif Sousse,2026-01-31,3.61,45,86.1,0,4.4,83.2,0.939,0.803,High
+KPI082,P004,Complexe Sportif Sousse,2026-02-28,3.73,48,86.1,2,4.3,83.4,0.936,0.797,High
+KPI083,P006,Villa Privée Gammarth,2025-02-28,-0.9,-6,89.9,0,4.6,85.6,1.011,1.018,Low
+KPI084,P006,Villa Privée Gammarth,2025-03-31,-1.05,-6,90.4,0,4.6,85.1,1.007,1.023,Low
+KPI085,P006,Villa Privée Gammarth,2025-04-30,-1.08,-6,90.0,0,4.6,84.8,1.013,1.03,Low
+KPI086,P006,Villa Privée Gammarth,2025-05-31,-1.05,-6,90.3,0,4.6,84.9,1.005,1.023,Low
+KPI087,P006,Villa Privée Gammarth,2025-06-30,-1.18,-6,90.4,0,4.5,84.9,1.009,1.023,Low
+KPI088,P006,Villa Privée Gammarth,2025-07-31,-1.18,-7,90.3,0,4.5,85.3,1.016,1.028,Low
+KPI089,P006,Villa Privée Gammarth,2025-08-31,-1.22,-6,90.8,0,4.5,84.6,1.015,1.036,Low
+KPI090,P006,Villa Privée Gammarth,2025-09-30,-1.22,-5,90.6,0,4.5,84.5,1.018,1.034,Low
+KPI091,P006,Villa Privée Gammarth,2025-10-31,-1.2,-7,90.8,0,4.4,84.1,1.012,1.035,Low
+KPI092,P006,Villa Privée Gammarth,2025-11-30,-1.25,-8,90.3,0,4.5,83.2,1.019,1.04,Low
+KPI093,P006,Villa Privée Gammarth,2025-12-31,-1.41,-9,90.6,0,4.5,83.4,1.015,1.039,Low
+KPI094,P006,Villa Privée Gammarth,2026-01-31,-1.48,-10,91.1,0,4.5,84.6,1.022,1.037,Low
+KPI095,P006,Villa Privée Gammarth,2026-02-28,-1.5,-11,91.3,1,4.5,85.7,1.024,1.038,Low
+KPI096,P007,Usine Agroalimentaire,2025-02-28,-0.35,12,91.0,0,4.4,87.5,0.997,0.959,Medium
+KPI097,P007,Usine Agroalimentaire,2025-03-31,-0.23,14,90.6,0,4.3,88.2,0.995,0.952,Medium
+KPI098,P007,Usine Agroalimentaire,2025-04-30,-0.07,15,91.0,0,4.3,88.1,0.994,0.945,Medium
+KPI099,P007,Usine Agroalimentaire,2025-05-31,0.1,17,91.1,0,4.2,87.9,0.99,0.939,Medium
+KPI100,P007,Usine Agroalimentaire,2025-06-30,0.19,19,91.2,0,4.2,87.9,0.983,0.931,Medium
+KPI101,P007,Usine Agroalimentaire,2025-07-31,0.3,20,91.4,0,4.1,87.2,0.988,0.925,Medium
+KPI102,P007,Usine Agroalimentaire,2025-08-31,0.43,20,91.3,0,4.0,87.5,0.995,0.915,Medium
+KPI103,P007,Usine Agroalimentaire,2025-09-30,0.59,20,91.3,2,4.1,87.1,1.002,0.916,Medium
+KPI104,P007,Usine Agroalimentaire,2025-10-31,0.66,22,91.0,0,4.2,86.6,1.003,0.913,Medium
+KPI105,P007,Usine Agroalimentaire,2025-11-30,0.88,23,90.5,0,4.2,86.3,1.008,0.913,Medium
+KPI106,P007,Usine Agroalimentaire,2025-12-31,0.91,24,91.0,0,4.2,86.9,1.004,0.91,Medium
+KPI107,P007,Usine Agroalimentaire,2026-01-31,0.96,26,90.9,0,4.2,86.9,1.002,0.902,Medium
+KPI108,P007,Usine Agroalimentaire,2026-02-28,1.09,27,90.7,0,4.2,87.5,1.004,0.898,Medium
+KPI109,P008,École Primaire Manouba,2025-02-28,-0.71,0,93.1,0,4.7,90.0,1.011,1.003,Low
+KPI110,P008,École Primaire Manouba,2025-03-31,-0.67,0,92.9,0,4.8,90.7,1.025,0.997,Low
+KPI111,P008,École Primaire Manouba,2025-04-30,-0.59,0,92.9,0,4.8,91.2,1.021,0.999,Low
+KPI112,P008,École Primaire Manouba,2025-05-31,-0.58,-1,92.8,0,4.8,91.7,1.023,0.999,Low
+KPI113,P008,École Primaire Manouba,2025-06-30,-0.52,0,92.9,0,4.8,91.2,1.025,0.993,Low
+KPI114,P008,École Primaire Manouba,2025-07-31,-0.5,1,93.3,0,4.7,90.7,1.014,0.992,Low
+KPI115,P008,École Primaire Manouba,2025-08-31,-0.46,2,93.4,0,4.7,91.2,1.013,0.991,Low
+KPI116,P008,École Primaire Manouba,2025-09-30,-0.43,2,92.9,0,4.6,91.4,1.018,0.99,Low
+KPI117,P008,École Primaire Manouba,2025-10-31,-0.38,1,92.6,0,4.6,90.7,1.013,0.981,Low
+KPI118,P008,École Primaire Manouba,2025-11-30,-0.44,2,93.1,0,4.6,90.5,1.015,0.979,Low
+KPI119,P008,École Primaire Manouba,2025-12-31,-0.44,1,93.0,0,4.6,91.0,1.022,0.978,Low
+KPI120,P008,École Primaire Manouba,2026-01-31,-0.4,1,92.9,0,4.5,90.4,1.025,0.988,Low
+KPI121,P008,École Primaire Manouba,2026-02-28,-0.39,1,92.5,0,4.5,90.7,1.034,0.991,Low
+KPI122,P009,Pont Autoroutier A1,2025-02-28,1.03,32,88.2,0,3.8,83.6,0.978,0.892,High
+KPI123,P009,Pont Autoroutier A1,2025-03-31,1.24,36,88.3,0,3.7,83.2,0.967,0.892,High
+KPI124,P009,Pont Autoroutier A1,2025-04-30,1.5,40,88.2,0,3.7,82.7,0.958,0.865,High
+KPI125,P009,Pont Autoroutier A1,2025-05-31,1.77,44,88.2,0,3.7,81.6,0.95,0.846,High
+KPI126,P009,Pont Autoroutier A1,2025-06-30,1.99,47,88.1,0,3.7,81.9,0.94,0.841,High
+KPI127,P009,Pont Autoroutier A1,2025-07-31,2.22,50,88.0,0,3.7,82.2,0.943,0.828,High
+KPI128,P009,Pont Autoroutier A1,2025-08-31,2.42,52,87.3,0,3.7,82.8,0.935,0.823,High
+KPI129,P009,Pont Autoroutier A1,2025-09-30,2.72,55,87.2,0,3.8,81.8,0.934,0.804,High
+KPI130,P009,Pont Autoroutier A1,2025-10-31,3.03,58,87.6,0,3.9,81.8,0.922,0.79,High
+KPI131,P009,Pont Autoroutier A1,2025-11-30,3.24,61,87.3,0,3.9,82.1,0.908,0.776,High
+KPI132,P009,Pont Autoroutier A1,2025-12-31,3.56,64,87.4,0,3.9,81.2,0.909,0.772,High
+KPI133,P009,Pont Autoroutier A1,2026-01-31,3.76,66,87.7,0,3.9,80.3,0.907,0.759,High
+KPI134,P009,Pont Autoroutier A1,2026-02-28,3.96,68,87.8,0,3.8,80.7,0.901,0.75,High
+KPI135,P010,Rénovation Médina Kairouan,2025-02-28,1.99,-8,93.7,0,4.8,89.6,0.972,1.049,Low
+KPI136,P010,Rénovation Médina Kairouan,2025-03-31,2.03,-9,93.1,0,4.8,89.6,0.975,1.052,Medium
+KPI137,P010,Rénovation Médina Kairouan,2025-04-30,2.3,-11,93.4,0,4.8,90.0,0.971,1.049,Medium
+KPI138,P010,Rénovation Médina Kairouan,2025-05-31,2.38,-11,93.2,0,4.8,90.2,0.966,1.052,Medium
+KPI139,P010,Rénovation Médina Kairouan,2025-06-30,2.42,-12,93.5,0,4.7,90.3,0.963,1.056,Medium
+KPI140,P010,Rénovation Médina Kairouan,2025-07-31,2.65,-13,93.5,0,4.7,89.3,0.96,1.058,Medium
+KPI141,P010,Rénovation Médina Kairouan,2025-08-31,2.8,-13,93.3,0,4.7,89.3,0.952,1.065,Medium
+KPI142,P010,Rénovation Médina Kairouan,2025-09-30,3.02,-14,93.7,0,4.6,88.6,0.952,1.068,Medium
+KPI143,P010,Rénovation Médina Kairouan,2025-10-31,3.21,-15,93.5,0,4.5,89.3,0.947,1.076,Medium
+KPI144,P010,Rénovation Médina Kairouan,2025-11-30,3.35,-15,93.1,0,4.5,89.9,0.941,1.08,Medium
+KPI145,P010,Rénovation Médina Kairouan,2025-12-31,3.43,-17,92.7,0,4.4,89.6,0.932,1.074,Medium
+KPI146,P010,Rénovation Médina Kairouan,2026-01-31,3.52,-18,92.8,0,4.4,89.3,0.924,1.08,Medium
+KPI147,P010,Rénovation Médina Kairouan,2026-02-28,3.51,-19,92.9,0,4.4,89.6,0.909,1.08,Medium
+KPI148,P011,Hôtel 5 Étoiles Djerba,2025-02-28,-0.0,13,90.5,0,4.5,89.0,0.993,0.947,Medium
+KPI149,P011,Hôtel 5 Étoiles Djerba,2025-03-31,0.03,12,90.1,0,4.6,89.6,1.0,0.942,Low
+KPI150,P011,Hôtel 5 Étoiles Djerba,2025-04-30,0.09,12,89.8,0,4.6,89.5,0.991,0.931,Medium
+KPI151,P011,Hôtel 5 Étoiles Djerba,2025-05-31,0.24,14,89.8,0,4.6,90.0,0.979,0.924,Medium
+KPI152,P011,Hôtel 5 Étoiles Djerba,2025-06-30,0.19,14,89.7,0,4.6,90.0,0.978,0.925,Medium
+KPI153,P011,Hôtel 5 Étoiles Djerba,2025-07-31,0.28,16,90.0,0,4.6,90.0,0.972,0.915,Medium
+KPI154,P011,Hôtel 5 Étoiles Djerba,2025-08-31,0.3,18,90.4,0,4.6,90.1,0.973,0.902,Medium
+KPI155,P011,Hôtel 5 Étoiles Djerba,2025-09-30,0.44,18,89.6,0,4.6,89.8,0.977,0.903,Medium
+KPI156,P011,Hôtel 5 Étoiles Djerba,2025-10-31,0.53,20,89.7,2,4.6,89.3,0.982,0.893,Medium
+KPI157,P011,Hôtel 5 Étoiles Djerba,2025-11-30,0.58,22,89.7,0,4.6,89.5,0.978,0.889,Medium
+KPI158,P011,Hôtel 5 Étoiles Djerba,2025-12-31,0.73,24,89.7,0,4.6,89.7,0.985,0.896,Medium
+KPI159,P011,Hôtel 5 Étoiles Djerba,2026-01-31,0.81,26,89.8,2,4.6,89.6,0.984,0.893,Medium
+KPI160,P011,Hôtel 5 Étoiles Djerba,2026-02-28,0.89,25,89.9,0,4.6,89.6,0.981,0.881,Medium
+KPI161,P012,Parking Multi-Étages Centre-Ville,2025-02-28,1.18,-16,90.7,0,4.5,85.2,0.994,1.074,Low
+KPI162,P012,Parking Multi-Étages Centre-Ville,2025-03-31,1.15,-18,90.7,0,4.5,85.3,1.0,1.067,Low
+KPI163,P012,Parking Multi-Étages Centre-Ville,2025-04-30,1.16,-19,90.3,0,4.6,84.8,0.998,1.066,Low
+KPI164,P012,Parking Multi-Étages Centre-Ville,2025-05-31,1.12,-19,90.0,0,4.6,84.0,1.005,1.074,Low
+KPI165,P012,Parking Multi-Étages Centre-Ville,2025-06-30,1.06,-20,89.9,0,4.6,83.3,1.004,1.083,Low
+KPI166,P012,Parking Multi-Étages Centre-Ville,2025-07-31,1.06,-20,90.1,0,4.6,83.4,1.015,1.096,Low
+KPI167,P012,Parking Multi-Étages Centre-Ville,2025-08-31,1.05,-22,90.0,0,4.6,83.0,1.012,1.097,Low
+KPI168,P012,Parking Multi-Étages Centre-Ville,2025-09-30,1.08,-22,89.9,0,4.6,83.5,1.008,1.108,Low
+KPI169,P012,Parking Multi-Étages Centre-Ville,2025-10-31,1.03,-23,89.6,0,4.7,82.7,1.018,1.118,Low
+KPI170,P012,Parking Multi-Étages Centre-Ville,2025-11-30,0.96,-23,89.3,0,4.8,82.9,1.019,1.117,Low
+KPI171,P012,Parking Multi-Étages Centre-Ville,2025-12-31,0.93,-23,89.3,0,4.8,83.3,1.02,1.117,Low
+KPI172,P012,Parking Multi-Étages Centre-Ville,2026-01-31,0.85,-23,89.4,0,4.8,83.8,1.028,1.129,Low
+KPI173,P012,Parking Multi-Étages Centre-Ville,2026-02-28,0.77,-24,89.5,0,4.8,84.2,1.031,1.127,Low
+KPI174,P014,Entrepôt Logistique Radès,2025-02-28,-0.66,9,92.0,0,4.6,90.8,1.016,0.943,Low
+KPI175,P014,Entrepôt Logistique Radès,2025-03-31,-0.62,10,92.0,2,4.6,90.3,1.012,0.936,Low
+KPI176,P014,Entrepôt Logistique Radès,2025-04-30,-0.5,12,91.8,0,4.6,90.7,1.008,0.934,Low
+KPI177,P014,Entrepôt Logistique Radès,2025-05-31,-0.38,13,91.7,0,4.6,90.0,1.008,0.938,Low
+KPI178,P014,Entrepôt Logistique Radès,2025-06-30,-0.25,14,92.0,0,4.5,90.4,1.008,0.934,Low
+KPI179,P014,Entrepôt Logistique Radès,2025-07-31,-0.28,16,91.6,0,4.5,90.1,1.013,0.943,Medium
+KPI180,P014,Entrepôt Logistique Radès,2025-08-31,-0.16,16,91.9,0,4.5,89.7,1.014,0.95,Medium
+KPI181,P014,Entrepôt Logistique Radès,2025-09-30,-0.02,17,91.9,0,4.5,90.4,1.01,0.947,Medium
+KPI182,P014,Entrepôt Logistique Radès,2025-10-31,0.04,18,92.1,0,4.5,90.2,1.011,0.946,Medium
+KPI183,P014,Entrepôt Logistique Radès,2025-11-30,0.08,19,91.8,0,4.4,89.3,1.004,0.941,Medium
+KPI184,P014,Entrepôt Logistique Radès,2025-12-31,0.05,20,91.9,0,4.3,88.6,1.002,0.934,Medium
+KPI185,P014,Entrepôt Logistique Radès,2026-01-31,0.12,21,91.7,2,4.3,87.8,1.0,0.932,Medium
+KPI186,P014,Entrepôt Logistique Radès,2026-02-28,0.09,21,91.1,0,4.2,88.1,1.0,0.933,Medium
+KPI187,P015,Centre Culturel Monastir,2025-02-28,4.48,3,85.5,0,4.1,77.6,0.951,0.996,Medium
+KPI188,P015,Centre Culturel Monastir,2025-03-31,4.85,5,85.6,0,4.1,77.6,0.944,0.986,Medium
+KPI189,P015,Centre Culturel Monastir,2025-04-30,5.14,8,85.7,0,4.0,77.8,0.93,0.987,Medium
+KPI190,P015,Centre Culturel Monastir,2025-05-31,5.45,10,85.2,0,4.0,77.5,0.928,0.976,Medium
+KPI191,P015,Centre Culturel Monastir,2025-06-30,5.78,12,84.9,0,4.0,77.9,0.926,0.969,High
+KPI192,P015,Centre Culturel Monastir,2025-07-31,6.06,15,84.4,0,4.0,77.1,0.907,0.959,High
+KPI193,P015,Centre Culturel Monastir,2025-08-31,6.33,16,84.5,0,4.0,77.6,0.894,0.958,High
+KPI194,P015,Centre Culturel Monastir,2025-09-30,6.61,18,84.4,0,4.0,76.7,0.886,0.954,High
+KPI195,P015,Centre Culturel Monastir,2025-10-31,6.95,20,84.3,0,4.0,77.1,0.876,0.946,High
+KPI196,P015,Centre Culturel Monastir,2025-11-30,7.18,23,84.5,0,4.0,77.6,0.871,0.935,High
+KPI197,P015,Centre Culturel Monastir,2025-12-31,7.48,24,84.6,0,3.9,77.8,0.857,0.929,High
+KPI198,P015,Centre Culturel Monastir,2026-01-31,7.74,27,84.9,0,3.8,77.6,0.846,0.923,High
+KPI199,P015,Centre Culturel Monastir,2026-02-28,8.05,28,85.2,0,3.8,78.4,0.836,0.925,High
+KPI200,P016,Immeuble Résidentiel Nabeul,2025-02-28,0.81,3,93.6,0,4.7,91.4,0.997,0.977,Low
+KPI201,P016,Immeuble Résidentiel Nabeul,2025-03-31,0.87,4,93.9,0,4.7,91.5,0.995,0.977,Low
+KPI202,P016,Immeuble Résidentiel Nabeul,2025-04-30,1.08,6,93.5,0,4.7,91.2,0.996,0.98,Medium
+KPI203,P016,Immeuble Résidentiel Nabeul,2025-05-31,1.17,6,93.5,0,4.7,91.5,1.0,0.985,Low
+KPI204,P016,Immeuble Résidentiel Nabeul,2025-06-30,1.24,5,93.5,2,4.7,91.9,0.997,0.982,Low
+KPI205,P016,Immeuble Résidentiel Nabeul,2025-07-31,1.25,4,93.1,0,4.7,91.5,1.005,0.985,Low
+KPI206,P016,Immeuble Résidentiel Nabeul,2025-08-31,1.25,4,93.4,0,4.7,92.2,1.004,0.98,Low
+KPI207,P016,Immeuble Résidentiel Nabeul,2025-09-30,1.22,6,93.3,0,4.7,92.3,0.995,0.977,Medium
+KPI208,P016,Immeuble Résidentiel Nabeul,2025-10-31,1.26,6,93.4,0,4.7,93.0,1.0,0.975,Low
+KPI209,P016,Immeuble Résidentiel Nabeul,2025-11-30,1.24,5,93.2,0,4.8,93.4,1.002,0.977,Low
+KPI210,P016,Immeuble Résidentiel Nabeul,2025-12-31,1.22,5,93.6,0,4.8,93.4,1.001,0.981,Low
+KPI211,P016,Immeuble Résidentiel Nabeul,2026-01-31,1.3,4,93.2,0,4.9,93.3,0.998,0.984,Low
+KPI212,P016,Immeuble Résidentiel Nabeul,2026-02-28,1.35,4,93.3,0,4.9,94.2,1.007,0.99,Low
+KPI213,P017,Station d'Épuration,2025-02-28,-0.19,20,89.2,0,4.2,85.4,1.0,0.922,Medium
+KPI214,P017,Station d'Épuration,2025-03-31,0.03,23,89.6,0,4.2,85.8,0.999,0.9,Medium
+KPI215,P017,Station d'Épuration,2025-04-30,0.16,26,89.8,0,4.2,85.0,0.988,0.896,Medium
+KPI216,P017,Station d'Épuration,2025-05-31,0.34,27,89.4,0,4.3,85.3,0.98,0.883,Medium
+KPI217,P017,Station d'Épuration,2025-06-30,0.41,29,89.7,0,4.2,85.1,0.977,0.877,Medium
+KPI218,P017,Station d'Épuration,2025-07-31,0.57,31,89.7,0,4.2,85.5,0.969,0.871,High
+KPI219,P017,Station d'Épuration,2025-08-31,0.7,33,89.6,0,4.2,85.6,0.968,0.868,High
+KPI220,P017,Station d'Épuration,2025-09-30,0.85,33,89.9,0,4.2,85.3,0.963,0.867,High
+KPI221,P017,Station d'Épuration,2025-10-31,0.94,32,90.1,0,4.2,84.9,0.96,0.863,High
+KPI222,P017,Station d'Épuration,2025-11-30,0.92,36,89.7,0,4.2,84.8,0.953,0.852,High
+KPI223,P017,Station d'Épuration,2025-12-31,1.11,40,89.6,0,4.2,85.7,0.948,0.842,High
+KPI224,P017,Station d'Épuration,2026-01-31,1.25,41,89.5,0,4.2,85.7,0.944,0.83,High
+KPI225,P017,Station d'Épuration,2026-02-28,1.45,43,89.2,0,4.2,85.5,0.939,0.817,High
+KPI226,P018,Complexe Administratif,2025-02-28,0.31,-4,92.0,0,4.5,88.4,1.004,1.019,Low
+KPI227,P018,Complexe Administratif,2025-03-31,0.33,-5,92.2,0,4.4,88.3,0.995,1.021,Low
+KPI228,P018,Complexe Administratif,2025-04-30,0.38,-5,92.2,0,4.4,88.5,1.008,1.019,Low
+KPI229,P018,Complexe Administratif,2025-05-31,0.39,-4,91.9,0,4.3,88.2,1.007,1.02,Low
+KPI230,P018,Complexe Administratif,2025-06-30,0.4,-4,91.9,0,4.3,88.0,1.005,1.023,Low
+KPI231,P018,Complexe Administratif,2025-07-31,0.43,-5,91.8,0,4.3,88.5,1.008,1.031,Low
+KPI232,P018,Complexe Administratif,2025-08-31,0.41,-6,91.5,0,4.2,88.7,1.013,1.035,Low
+KPI233,P018,Complexe Administratif,2025-09-30,0.38,-5,91.7,0,4.2,89.2,1.013,1.039,Low
+KPI234,P018,Complexe Administratif,2025-10-31,0.4,-6,91.8,0,4.2,89.6,1.008,1.044,Low
+KPI235,P018,Complexe Administratif,2025-11-30,0.53,-5,92.4,0,4.2,90.1,1.012,1.042,Low
+KPI236,P018,Complexe Administratif,2025-12-31,0.44,-5,92.4,2,4.2,89.7,1.016,1.05,Low
+KPI237,P018,Complexe Administratif,2026-01-31,0.33,-6,92.7,0,4.2,90.2,1.018,1.057,Low
+KPI238,P018,Complexe Administratif,2026-02-28,0.3,-8,93.0,0,4.2,89.4,1.017,1.05,Low
+KPI239,P019,Mosquée Communautaire,2025-02-28,-0.47,3,94.3,0,4.8,92.0,1.003,0.996,Low
+KPI240,P019,Mosquée Communautaire,2025-03-31,-0.53,3,94.3,0,4.8,91.6,1.002,1.001,Low
+KPI241,P019,Mosquée Communautaire,2025-04-30,-0.55,2,94.5,0,4.8,91.3,0.997,1.001,Low
+KPI242,P019,Mosquée Communautaire,2025-05-31,-0.52,2,94.9,0,4.9,92.6,0.994,0.998,Low
+KPI243,P019,Mosquée Communautaire,2025-06-30,-0.55,3,94.8,0,4.9,92.8,0.998,0.993,Low
+KPI244,P019,Mosquée Communautaire,2025-07-31,-0.61,4,94.3,0,4.9,92.7,0.998,0.995,Low
+KPI245,P019,Mosquée Communautaire,2025-08-31,-0.54,4,94.2,0,4.8,93.0,1.0,0.989,Low
+KPI246,P019,Mosquée Communautaire,2025-09-30,-0.5,4,94.1,2,4.8,92.9,0.999,0.988,Low
+KPI247,P019,Mosquée Communautaire,2025-10-31,-0.57,5,93.8,0,4.8,93.4,1.002,0.994,Low
+KPI248,P019,Mosquée Communautaire,2025-11-30,-0.66,4,93.8,0,4.7,94.3,1.002,1.0,Low
+KPI249,P019,Mosquée Communautaire,2025-12-31,-0.74,4,93.6,0,4.6,94.2,0.998,0.991,Low
+KPI250,P019,Mosquée Communautaire,2026-01-31,-0.7,4,93.3,0,4.6,93.4,1.003,1.004,Low
+KPI251,P019,Mosquée Communautaire,2026-02-28,-0.78,5,93.3,0,4.6,92.8,0.993,1.0,Low
+KPI252,P020,Parc Industriel,2025-02-28,0.65,27,86.8,2,4.0,84.3,0.987,0.901,Medium
+KPI253,P020,Parc Industriel,2025-03-31,0.78,28,86.7,0,4.1,84.3,0.983,0.901,Medium
+KPI254,P020,Parc Industriel,2025-04-30,0.98,31,86.6,0,4.1,84.5,0.979,0.895,High
+KPI255,P020,Parc Industriel,2025-05-31,1.09,34,86.8,0,4.1,83.9,0.981,0.896,High
+KPI256,P020,Parc Industriel,2025-06-30,1.19,35,87.0,0,4.2,84.2,0.968,0.886,High
+KPI257,P020,Parc Industriel,2025-07-31,1.38,39,87.3,2,4.2,84.8,0.963,0.876,High
+KPI258,P020,Parc Industriel,2025-08-31,1.46,42,86.7,0,4.2,84.9,0.954,0.867,High
+KPI259,P020,Parc Industriel,2025-09-30,1.55,43,86.5,0,4.2,85.1,0.945,0.863,High
+KPI260,P020,Parc Industriel,2025-10-31,1.71,45,86.9,2,4.2,84.5,0.948,0.85,High
+KPI261,P020,Parc Industriel,2025-11-30,1.91,47,87.3,1,4.1,84.8,0.942,0.838,High
+KPI262,P020,Parc Industriel,2025-12-31,2.04,50,87.5,0,4.1,85.2,0.939,0.827,High
+KPI263,P020,Parc Industriel,2026-01-31,2.26,52,87.2,0,4.0,85.4,0.933,0.817,High
+KPI264,P020,Parc Industriel,2026-02-28,2.45,54,86.9,0,4.0,85.6,0.93,0.814,High

@@ -18,7 +18,7 @@ def get_employees(
     db=Depends(get_db)
 ):
     cursor = db.cursor()
-    if user["role"] in ("ceo", "rh"):
+    if user["role"] in ("ceo", "rh", "admin"):
         query = "SELECT * FROM employees WHERE 1=1"
         params = []
     elif user["role"] == "manager":
@@ -61,8 +61,8 @@ def get_employee(employee_id: str, user: dict = Depends(authenticate_with_token)
 
 @router.post("", response_model=Employee, status_code=status.HTTP_201_CREATED)
 def create_employee(employee: EmployeeCreate, user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
-    if user["role"] != "ceo":
-        raise HTTPException(status_code=403, detail="Only CEO can create employees")
+    if user["role"] not in ("ceo", "admin"):
+        raise HTTPException(status_code=403, detail="Only CEO or Admin can create employees")
     cursor = db.cursor()
     cursor.execute("SELECT employee_id FROM employees WHERE employee_id = ? OR username = ?",
                    (employee.employee_id, employee.username))
@@ -72,14 +72,14 @@ def create_employee(employee: EmployeeCreate, user: dict = Depends(authenticate_
     cursor.execute("""
         INSERT INTO employees (
             employee_id, username, password_hash, first_name, last_name, email, phone,
-            position, department, role, hire_date, salary_eur, manager_id,
+            position, department, role, hire_date, salary, manager_id,
             supervised_employees, assigned_projects, specialization, certifications, years_experience
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         employee.employee_id, employee.username, password_hash,
         employee.first_name, employee.last_name, employee.email, employee.phone,
         employee.position, employee.department, employee.role, employee.hire_date,
-        employee.salary_eur, employee.manager_id, employee.supervised_employees,
+        employee.salary, employee.manager_id, employee.supervised_employees,
         employee.assigned_projects, employee.specialization, employee.certifications,
         employee.years_experience
     ))
@@ -93,6 +93,10 @@ def create_employee(employee: EmployeeCreate, user: dict = Depends(authenticate_
 @router.put("/{employee_id}", response_model=Employee)
 def update_employee(employee_id: str, employee_update: EmployeeUpdate,
                     user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
+    if user["role"] == "ceo":
+        raise HTTPException(status_code=403, detail="CEO cannot directly edit employee records — use RH module")
+    if user["role"] not in ("admin", "rh", "manager", "employee"):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     if user["role"] == "employee" and employee_id != user["employee_id"]:
         raise HTTPException(status_code=403, detail="You can only update your own information")
     if user["role"] == "manager" and employee_id not in user["supervised_employees"] and employee_id != user["employee_id"]:
@@ -105,7 +109,9 @@ def update_employee(employee_id: str, employee_update: EmployeeUpdate,
     for field, value in employee_update.model_dump(exclude_unset=True).items():
         if user["role"] == "employee" and field in EMPLOYEE_LOCKED_FIELDS:
             continue
-        if user["role"] == "manager" and field in ["role", "salary_eur"]:
+        if user["role"] == "manager" and field in ["role", "salary"]:
+            continue
+        if user["role"] == "rh" and field in ["role", "salary", "password_hash"]:
             continue
         update_fields.append(f"{field} = ?")
         update_values.append(value)
@@ -121,8 +127,9 @@ def update_employee(employee_id: str, employee_update: EmployeeUpdate,
 
 @router.delete("/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_employee(employee_id: str, user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
-    if user["role"] != "ceo":
-        raise HTTPException(status_code=403, detail="Only CEO can delete employees")
+    # Only RH and Admin can delete employees (CEO has no CRUD rights on employees)
+    if user["role"] not in ("rh", "admin"):
+        raise HTTPException(status_code=403, detail="Only RH or Admin can delete employees")
     if employee_id == user["employee_id"]:
         raise HTTPException(status_code=400, detail="You cannot delete yourself")
     cursor = db.cursor()

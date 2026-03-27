@@ -84,7 +84,7 @@ def check_edit_permission(user: dict):
 
 
 def get_accessible_projects(user: dict, db):
-    if user["role"] == "ceo":
+    if user["role"] in ("ceo", "rh"):
         return None
     cursor = db.cursor()
     if user["role"] == "manager":

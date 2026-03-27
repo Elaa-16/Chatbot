@@ -16,48 +16,108 @@ def get_kpis(
     project_id: Optional[str] = None,
     spi_max: Optional[float] = None,
     cpi_max: Optional[float] = None,
+    history: Optional[bool] = None,          # NEW: ?history=true → all periods
     user: dict = Depends(authenticate_with_token),
     db=Depends(get_db)
 ):
     accessible_projects = get_accessible_projects(user, db)
     cursor = db.cursor()
+
+    # ── Base scope ────────────────────────────────────────────────────────────
     if accessible_projects is None:
-        query = "SELECT * FROM kpis WHERE 1=1"
+        base_filter = "WHERE 1=1"
         params = []
     elif not accessible_projects:
         return []
     else:
         placeholders = ','.join(['?' for _ in accessible_projects])
-        query = f"SELECT * FROM kpis WHERE project_id IN ({placeholders})"
+        base_filter = f"WHERE project_id IN ({placeholders})"
         params = list(accessible_projects)
+
+    # ── history=true → return ALL periods (for trend charts) ─────────────────
+    # history=false or absent → return only the LATEST KPI per project (default)
+    if history:
+        # Full history: apply optional filters then return all rows ordered by date
+        query = f"SELECT * FROM kpis {base_filter}"
+        if project_id:
+            query += " AND project_id = ?"
+            params.append(project_id)
+        if delayed is True:
+            query += " AND schedule_variance_days > 0"
+        if over_budget is True:
+            query += " AND budget_variance_percentage > 0"
+        if risk_level:
+            query += " AND risk_level = ?"
+            params.append(risk_level)
+        if spi_max is not None:
+            query += " AND schedule_performance_index < ?"
+            params.append(spi_max)
+        if cpi_max is not None:
+            query += " AND cost_performance_index < ?"
+            params.append(cpi_max)
+        query += " ORDER BY project_id, kpi_date ASC"
+        cursor.execute(query, params)
+        return [dict(k) for k in cursor.fetchall()]
+
+    # ── DEFAULT: latest KPI per project via window function ──────────────────
+    # Use a subquery to get max kpi_date per project, then join back.
+    # All optional filters are applied AFTER picking the latest snapshot.
+    latest_sub = f"""
+        SELECT k.*
+        FROM kpis k
+        INNER JOIN (
+            SELECT project_id, MAX(kpi_date) AS max_date
+            FROM kpis
+            {base_filter.replace('WHERE', 'WHERE')}
+            {'AND project_id = ?' if project_id else ''}
+            GROUP BY project_id
+        ) latest ON k.project_id = latest.project_id
+                 AND k.kpi_date  = latest.max_date
+        WHERE 1=1
+    """
+    # params already has the accessible_projects values; add project_id again
+    # for the subquery if needed
+    sub_params = list(params)
     if project_id:
-        query += " AND project_id = ?"
-        params.append(project_id)
+        sub_params.append(project_id)
+
+    # Now apply the metric filters on top of the latest snapshot
+    metric_params = []
+    metric_clauses = ""
     if delayed is True:
-        query += " AND schedule_variance_days > 0"
+        metric_clauses += " AND k.schedule_variance_days > 0"
     if over_budget is True:
-        query += " AND budget_variance_percentage > 0"
+        metric_clauses += " AND k.budget_variance_percentage > 0"
     if risk_level:
-        query += " AND risk_level = ?"
-        params.append(risk_level)
+        metric_clauses += " AND k.risk_level = ?"
+        metric_params.append(risk_level)
     if spi_max is not None:
-        query += " AND schedule_performance_index < ?"
-        params.append(spi_max)
+        metric_clauses += " AND k.schedule_performance_index < ?"
+        metric_params.append(spi_max)
     if cpi_max is not None:
-        query += " AND cost_performance_index < ?"
-        params.append(cpi_max)
-    query += " ORDER BY kpi_date DESC"
-    cursor.execute(query, params)
+        metric_clauses += " AND k.cost_performance_index < ?"
+        metric_params.append(cpi_max)
+
+    full_query = latest_sub + metric_clauses + " ORDER BY k.project_id"
+    cursor.execute(full_query, sub_params + metric_params)
     return [dict(k) for k in cursor.fetchall()]
 
 
 @router.get("/project/{project_id}", response_model=List[KPI])
-def get_project_kpis(project_id: str, user: dict = Depends(authenticate_with_token), db=Depends(get_db)):
+def get_project_kpis(
+    project_id: str,
+    user: dict = Depends(authenticate_with_token),
+    db=Depends(get_db)
+):
+    """Returns the full KPI history for a single project, newest first."""
     accessible_projects = get_accessible_projects(user, db)
     if accessible_projects is not None and project_id not in accessible_projects:
         raise HTTPException(status_code=403, detail=f"Access denied to KPIs for project {project_id}")
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM kpis WHERE project_id = ? ORDER BY kpi_date DESC", (project_id,))
+    cursor.execute(
+        "SELECT * FROM kpis WHERE project_id = ? ORDER BY kpi_date DESC",
+        (project_id,)
+    )
     return [dict(k) for k in cursor.fetchall()]
 
 

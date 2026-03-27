@@ -932,3 +932,139 @@ print(f"📁 Folder: rag_documents/")
 print("\nNext step: python vector.py to index everything!")
 print("\nNOTE: Live data (projects, employees, KPIs, equipment, suppliers)")
 print("      is served via API endpoints to the LLM planner — not in RAG.")
+
+# ════════════════════════════════════════════════════════════════════════════
+# 5. NOTES DE RÉUNION / COMPTES RENDUS / SECRÉTARIAT
+# ════════════════════════════════════════════════════════════════════════════
+
+write("rag_documents/emails/cr_reunion_chantier_mars2026.txt", """
+COMPTE RENDU DE RÉUNION DE CHANTIER
+Construction Tunisie — Réunion hebdomadaire
+===========================================
+Date: 10 mars 2026 | Lieu: Bureau de chantier P009 — Pont Autoroutier A1
+Présents: Karim Jebali (Chef de projet), Rami Ferchichi (Superviseur), Nadia Hamdi (Manager)
+Secrétaire de séance: Mariem Chakroun
+
+ORDRE DU JOUR
+1. Avancement des travaux
+2. Points bloquants
+3. Sécurité
+4. Prochaines étapes
+
+1. AVANCEMENT
+- Fondations piles P3 et P4 : 85% terminées (retard de 12 jours sur planning initial)
+- Coffrage tablier : en cours, livraison acier prévue 14 mars
+- Avancement global projet : 68%
+
+2. POINTS BLOQUANTS
+- Livraison acier structure (HA32) bloquée chez fournisseur Acier Plus — manque de stock
+- Permis voirie non encore accordé par la municipalité — relance envoyée le 08/03
+- Grue mobile en attente de certification HSE (inspection prévue 15 mars)
+
+3. SÉCURITÉ
+- 0 accident ce mois. Rappel port EPI obligatoire zone B.
+- Formation geste et posture programmée pour le 20 mars.
+
+4. DÉCISIONS
+- Karim Jebali doit relancer fournisseur Acier Plus avant le 12 mars
+- Nadia Hamdi suit le dossier permis voirie en urgence
+- Prochaine réunion: 17 mars 2026
+
+Signature: Mariem Chakroun (Secrétaire) | Karim Jebali (Approbateur)
+""")
+
+write("rag_documents/emails/note_secretariat_semaine11.txt", """
+NOTE DE SECRÉTARIAT — SEMAINE 11/2026
+Construction Tunisie — Direction Générale
+==========================================
+Date: 11 mars 2026 | Rédigée par: Mariem Chakroun
+
+RÉSUMÉ DE LA SEMAINE
+- Réunion direction du lundi 09/03 : budget Q1 validé à 87% d'exécution
+- Visite client Ministère de l'Équipement (projet P009) le 10/03 : satisfaction 4/5
+- Départ en congé de Sonia Mejri (16-18 mars) — remplacement assuré par Ines Hammami
+- Nouvelle demande de congé Rami Ferchichi (16-20 mars) — en attente validation Karim Jebali
+
+COURRIERS REÇUS
+- Lettre de réclamation client Djerba Luxury Hotels (P011) : retard livraison suites VIP
+- Devis reçu de Ciments de Tunisie pour livraison chantier P020 — en attente validation achat
+
+RAPPELS
+- Évaluations mi-parcours Q1 à soumettre avant le 20 mars
+- Renouvellement contrat Grue Services prévu le 31 mars
+- Réunion HSE mensuelle : 18 mars à 14h00
+
+ACTIONS EN ATTENTE
+- Réponse bureau de contrôle pour P012 (demandée depuis 01/03)
+- Validation budget phase 2 projet P009 par CEO
+""")
+
+write("rag_documents/emails/cr_reunion_direction_fevrier2026.txt", """
+COMPTE RENDU RÉUNION DE DIRECTION
+Construction Tunisie — Comité de Direction
+===========================================
+Date: 02 février 2026 | Durée: 2h30
+Présents: Ahmed Trabelsi (CEO), Leila Ben Salem (CFO), Fatma Gharbi (DRH),
+          Karim Jebali (Directeur Projets), Mohamed Khelifi (Directeur Opérations)
+Secrétaire: Mariem Chakroun
+
+1. BILAN FINANCIER JANVIER 2026
+- Budget total portefeuille: 103.7 M DT
+- Coût réel à date: 58.6 M DT (56.5% du budget consommé)
+- Avancement moyen: 54.1% — légèrement en dessous du prévisionnel (57%)
+- Projets en dépassement budgétaire: Centre Culturel Monastir (+4.2%)
+- CFO: recommande audit interne sur P010 (Rénovation Médina Kairouan) — CPI=0.98
+
+2. RESSOURCES HUMAINES
+- DRH: 4 employés en congé simultanément semaine 10 dont 2 avec tâches critiques
+- Action: protocole de remplacement obligatoire avant départ en congé si tâche critique
+- Recrutement: 2 postes ouverts (ingénieur génie civil + conducteur de travaux)
+
+3. PROJETS PRIORITAIRES
+- P009 Pont Autoroutier A1: retard 30j — réunion urgente avec équipe chantier
+- P020 Parc Industriel: retard 25j — révision planning nécessaire
+- P004 Complexe Sportif Sousse: blocage approvisionnement acier
+
+4. DÉCISIONS PRISES
+- Budget exceptionnel de 50K DT accordé pour P009 (accélération travaux)
+- Audit qualité P012 programmé pour fin février
+- Révision des procédures de congés pour éviter absences critiques simultanées
+
+Prochaine réunion direction: 02 mars 2026
+Approbation: Ahmed Trabelsi
+""")
+
+write("rag_documents/emails/note_rh_procedure_interne.txt", """
+NOTE DE SERVICE RH — PROCÉDURES INTERNES
+Construction Tunisie — Département RH
+======================================
+Réf: RH-2026-003 | Date: 15 janvier 2026
+De: Fatma Gharbi (DRH) | À: Tous les employés
+
+RAPPEL DES PROCÉDURES RH IMPORTANTES
+
+1. DEMANDE DE CONGÉ
+- Toute demande doit être soumise via l'ERP (module Congés)
+- Délai minimum: 15 jours pour congé ≥ 5 jours, 3 jours pour congé < 5 jours
+- Un employé NE PEUT PAS partir en congé s'il a des tâches critiques non assignées
+- En cas d'urgence: contacter directement le DRH
+
+2. ÉVALUATION DE PERFORMANCE
+- Évaluation annuelle: décembre de chaque année
+- Évaluation mi-parcours: juin de chaque année
+- Les KPIs projets sont pris en compte dans l'évaluation des chefs de projet
+- Toute mauvaise performance (3 mois consécutifs) déclenche un plan d'amélioration
+
+3. ACCÈS AU SYSTÈME ERP
+- Chaque employé accède uniquement à ses propres données
+- Les managers voient les données de leur équipe directe
+- Le CEO et RH ont accès global (dans les limites de leurs rôles)
+- Tout accès non autorisé est tracé et sanctionnable
+
+4. SIGNALEMENT D'INCIDENTS
+- Tout incident sur chantier doit être signalé dans l'ERP sous 24h
+- Accidents graves: appel immédiat HSE + rapport dans les 2h
+- Incidents répétitifs: réunion sécurité obligatoire dans les 48h
+
+Fatma Gharbi — DRH
+""")

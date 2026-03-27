@@ -14,6 +14,8 @@ import Navbar from './components/Navbar';
 import Issues from './components/Issues';
 import ChangePassword from './components/ChangePassword';
 import Reports from './components/Reports';
+import ApiWhitelist from './components/ApiWhitelist';
+import AuditLogs from './components/AuditLogs';
 
 // ── Redirect based on role after login ────────────────────────────────────────
 const getHomePage = (user) => {
@@ -70,71 +72,85 @@ function AppRoutes() {
 
       {/* Dashboard — not for rh */}
       <Route path="/dashboard" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'admin']}>
           <Layout><Dashboard /></Layout>
         </PrivateRoute>
       } />
 
       {/* Projects — not for rh */}
       <Route path="/projects" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'admin']}>
           <Layout><Projects /></Layout>
         </PrivateRoute>
       } />
 
       {/* Tasks — not for rh */}
       <Route path="/tasks" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'admin']}>
           <Layout><Tasks /></Layout>
         </PrivateRoute>
       } />
 
       {/* Issues — not for rh */}
       <Route path="/issues" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'admin']}>
           <Layout><Issues /></Layout>
         </PrivateRoute>
       } />
 
       {/* Reports — ceo and manager only */}
       <Route path="/reports" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'admin']}>
           <Layout><Reports /></Layout>
         </PrivateRoute>
       } />
 
       {/* Clients — ceo and manager only */}
       <Route path="/clients" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'admin']}>
           <Layout><Clients /></Layout>
         </PrivateRoute>
       } />
 
       {/* KPIs — ceo and manager only */}
       <Route path="/kpis" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'admin']}>
           <Layout><KPIs /></Layout>
         </PrivateRoute>
       } />
 
       {/* Employees — all except employee */}
       <Route path="/employees" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'rh']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'rh', 'admin']}>
           <Layout><Employees /></Layout>
         </PrivateRoute>
       } />
 
       {/* Leave requests — everyone */}
       <Route path="/leave-requests" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh', 'admin']}>
           <Layout><LeaveRequests /></Layout>
         </PrivateRoute>
       } />
 
       {/* Notifications — everyone */}
       <Route path="/notifications" element={
-        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh']}>
+        <PrivateRoute allowedRoles={['ceo', 'manager', 'employee', 'rh', 'admin']}>
           <Layout><Notifications /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* API Whitelist — admin only */}
+      <Route path="/whitelist" element={
+        <PrivateRoute allowedRoles={['admin']}>
+          <Layout><ApiWhitelist /></Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Audit Logs — admin only */}
+      <Route path="/logs" element={
+        <PrivateRoute allowedRoles={['admin']}>
+          <Layout><AuditLogs /></Layout>
         </PrivateRoute>
       } />
 

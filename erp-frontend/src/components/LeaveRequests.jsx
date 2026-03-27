@@ -1,444 +1,441 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus, X } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus, X, ChevronDown, Save} from 'lucide-react';
 import api from '../services/api';
 
+// ── Status config ─────────────────────────────────────────────────────────────
+const STATUS_MAP = {
+  Pending:   { bg:'#fffbeb', color:'#d97706', border:'#fde68a', icon:<Clock size={11}/>,        label:'En attente' },
+  Approved:  { bg:'#f0fdf4', color:'#16a34a', border:'#bbf7d0', icon:<CheckCircle size={11}/>,  label:'Approuvé' },
+  Rejected:  { bg:'#fef2f2', color:'#dc2626', border:'#fecaca', icon:<XCircle size={11}/>,      label:'Rejeté' },
+  Cancelled: { bg:'#f8fafc', color:'#64748b', border:'#e2e8f0', icon:<AlertCircle size={11}/>,  label:'Annulé' },
+};
+
+const LEAVE_TYPE_MAP = {
+  Annual:    { bg:'#eef2ff', color:'#4f46e5', label:'Annuel' },
+  Sick:      { bg:'#fef2f2', color:'#dc2626', label:'Maladie' },
+  Personal:  { bg:'#faf5ff', color:'#7c3aed', label:'Personnel' },
+  Maternity: { bg:'#fdf2f8', color:'#db2777', label:'Maternité' },
+  Emergency: { bg:'#fff7ed', color:'#ea580c', label:'Urgence' },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = STATUS_MAP[status] || STATUS_MAP.Pending;
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:5, background:s.bg, color:s.color, border:`1px solid ${s.border}`, borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
+      {s.icon}{s.label}
+    </span>
+  );
+};
+
+const TypeBadge = ({ type }) => {
+  const s = LEAVE_TYPE_MAP[type] || { bg:'#f8fafc', color:'#64748b', label: type };
+  return (
+    <span style={{ background:s.bg, color:s.color, borderRadius:20, padding:'3px 10px', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
+      {s.label}
+    </span>
+  );
+};
+
+const inputStyle = {
+  width:'100%', padding:'9px 12px', border:'1px solid #e2e8f0', borderRadius:8,
+  fontSize:14, background:'#f8fafc', boxSizing:'border-box', outline:'none',
+  fontFamily:'inherit', color:'#1e293b',
+};
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 const LeaveRequests = () => {
   const { user, isCEO, isManager, isRH } = useAuth();
-  const [requests, setRequests] = useState([]);
+  const canSubmit  = !isCEO && !isRH;
+  const canReview  = isManager || isRH;
+
+  const [requests,        setRequests]        = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [leaveStats, setLeaveStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewAction, setReviewAction] = useState(null);
-  const [selectedRequestForReview, setSelectedRequestForReview] = useState(null);
+  const [leaveStats,      setLeaveStats]      = useState(null);
+  const [loading,         setLoading]         = useState(true);
+  const [filter,          setFilter]          = useState('all');
+  const [modal,           setModal]           = useState(null); // null | 'create' | { mode:'review', request, action }
+
+  const [formData, setFormData] = useState({ leave_type:'Annual', start_date:'', end_date:'', reason:'' });
   const [reviewComment, setReviewComment] = useState('');
-  const [filter, setFilter] = useState('all');
-  
-  const [formData, setFormData] = useState({
-    leave_type: 'Annual',
-    start_date: '',
-    end_date: '',
-    reason: ''
-  });
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(); }, []);
   const loadData = async () => {
     try {
-      const [requestsRes, pendingRes, statsRes] = await Promise.all([
+      const [rR, pR, sR] = await Promise.all([
         api.get('/leave-requests'),
-        // CEO no longer fetches pending — only RH and managers act on them
-        (isManager || isRH) ? api.get('/leave-requests/pending') : Promise.resolve({ data: [] }),
-        api.get(`/employees/${user.employee_id}/leave-stats`)
+        canReview ? api.get('/leave-requests/pending') : Promise.resolve({ data:[] }),
+        api.get(`/employees/${user.employee_id}/leave-stats`),
       ]);
-      setRequests(requestsRes.data);
-      setPendingRequests(pendingRes.data);
-      setLeaveStats(statsRes.data);
-    } catch (error) {
-      console.error('Error loading leave data:', error);
-    } finally {
-      setLoading(false);
-    }
+      setRequests(rR.data);
+      setPendingRequests(pR.data);
+      setLeaveStats(sR.data);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
-  const calculateDays = (start, end) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const diffTime = Math.abs(endDate - startDate);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const calcDays = (s, e) => {
+    if (!s || !e) return 0;
+    return Math.ceil(Math.abs(new Date(e) - new Date(s)) / 86400000) + 1;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const totalDays = calculateDays(formData.start_date, formData.end_date);
-    if (totalDays <= 0) {
-      alert('La date de fin doit être après la date de début');
-      return;
-    }
+  const handleSubmit = async () => {
+    const totalDays = calcDays(formData.start_date, formData.end_date);
+    if (totalDays <= 0) return alert('Date de fin invalide');
+    setSaving(true);
     try {
-      const userResponse = await api.get(`/employees/${user.employee_id}`);
-      const employeeData = userResponse.data;
-      const requestData = {
-        request_id: `LR${Date.now()}`,
-        employee_id: user.employee_id,
-        employee_name: `${employeeData.first_name} ${employeeData.last_name}`,
-        leave_type: formData.leave_type,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        total_days: totalDays,
-        reason: formData.reason
-      };
-      await api.post('/leave-requests', requestData);
-      setShowModal(false);
-      setFormData({ leave_type: 'Annual', start_date: '', end_date: '', reason: '' });
+      const empRes = await api.get(`/employees/${user.employee_id}`);
+      const emp    = empRes.data;
+      await api.post('/leave-requests', {
+        request_id:    `LR${Date.now()}`,
+        employee_id:   user.employee_id,
+        employee_name: `${emp.first_name} ${emp.last_name}`,
+        leave_type:    formData.leave_type,
+        start_date:    formData.start_date,
+        end_date:      formData.end_date,
+        total_days:    totalDays,
+        reason:        formData.reason,
+      });
+      setModal(null);
+      setFormData({ leave_type:'Annual', start_date:'', end_date:'', reason:'' });
       loadData();
-    } catch (error) {
-      console.error('Error submitting leave request:', error);
-      alert(error.response?.data?.detail || 'Erreur lors de la soumission');
-    }
+    } catch (e) { alert(e.response?.data?.detail || 'Erreur'); }
+    finally { setSaving(false); }
   };
 
-  const openReviewModal = (request, action) => {
-    setSelectedRequestForReview(request);
-    setReviewAction(action);
-    setReviewComment('');
-    setShowReviewModal(true);
-  };
-
-  const handleReviewSubmit = async () => {
-    if (reviewAction === 'reject' && !reviewComment.trim()) {
-      alert('Vous devez fournir une raison pour le rejet');
-      return;
-    }
+  const handleReview = async () => {
+    const { request, action } = modal;
+    if (action === 'reject' && !reviewComment.trim()) return alert('Raison du rejet requise');
+    setSaving(true);
     try {
-      if (reviewAction === 'approve') {
-        await api.put(`/leave-requests/${selectedRequestForReview.request_id}/approve`, null, {
-          params: { review_comment: reviewComment }
-        });
+      if (action === 'approve') {
+        await api.put(`/leave-requests/${request.request_id}/approve`, null, { params:{ review_comment: reviewComment } });
       } else {
-        await api.put(`/leave-requests/${selectedRequestForReview.request_id}/reject?review_comment=${encodeURIComponent(reviewComment)}`);
+        await api.put(`/leave-requests/${request.request_id}/reject?review_comment=${encodeURIComponent(reviewComment)}`);
       }
-      setShowReviewModal(false);
+      setModal(null);
       setReviewComment('');
-      setSelectedRequestForReview(null);
       loadData();
-    } catch (error) {
-      console.error('Error reviewing request:', error);
-      alert(error.response?.data?.detail || 'Erreur lors de la révision');
-    }
+    } catch (e) { alert(e.response?.data?.detail || 'Erreur'); }
+    finally { setSaving(false); }
   };
 
-  const handleCancel = async (requestId) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) return;
-    try {
-      await api.put(`/leave-requests/${requestId}/cancel`);
-      loadData();
-    } catch (error) {
-      alert(error.response?.data?.detail || 'Erreur lors de l\'annulation');
-    }
+  const handleCancel = async (id) => {
+    if (!window.confirm('Annuler cette demande ?')) return;
+    try { await api.put(`/leave-requests/${id}/cancel`); loadData(); }
+    catch (e) { alert(e.response?.data?.detail || 'Erreur'); }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      'Pending':   { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: Clock,        label: 'En attente' },
-      'Approved':  { bg: 'bg-green-100',  text: 'text-green-800',  icon: CheckCircle,  label: 'Approuvé'   },
-      'Rejected':  { bg: 'bg-red-100',    text: 'text-red-800',    icon: XCircle,      label: 'Rejeté'     },
-      'Cancelled': { bg: 'bg-gray-100',   text: 'text-gray-800',   icon: AlertCircle,  label: 'Annulé'     },
-    };
-    const badge = badges[status] || badges.Pending;
-    const Icon = badge.icon;
-    return (
-      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${badge.bg} ${badge.text}`}>
-        <Icon className="w-4 h-4 mr-1" />
-        {badge.label}
-      </span>
-    );
-  };
+  const filtered = requests.filter(r =>
+    filter === 'all' ? true : r.status === filter.charAt(0).toUpperCase() + filter.slice(1)
+  );
 
-  const getLeaveTypeColor = (type) => {
-    const colors = {
-      'Annual':    'bg-blue-100 text-blue-800',
-      'Sick':      'bg-red-100 text-red-800',
-      'Personal':  'bg-purple-100 text-purple-800',
-      'Maternity': 'bg-pink-100 text-pink-800',
-      'Emergency': 'bg-orange-100 text-orange-800',
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
-  };
+  const FILTERS = [
+    { key:'all',      label:'Toutes',      count: requests.length },
+    { key:'pending',  label:'En attente',  count: requests.filter(r=>r.status==='Pending').length },
+    { key:'approved', label:'Approuvées',  count: requests.filter(r=>r.status==='Approved').length },
+    { key:'rejected', label:'Rejetées',    count: requests.filter(r=>r.status==='Rejected').length },
+  ];
 
-  const filteredRequests = requests.filter(req => {
-    if (filter === 'all') return true;
-    return req.status === filter.charAt(0).toUpperCase() + filter.slice(1);
-  });
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:300, gap:12 }}>
+      <div style={{ width:36, height:36, border:'3px solid #e2e8f0', borderTop:'3px solid #6366f1', borderRadius:'50%', animation:'spin .8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
-  if (loading) return <div className="text-center py-8">Chargement...</div>;
+  const days = calcDays(formData.start_date, formData.end_date);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
+    <div style={{ display:'flex', flexDirection:'column', gap:20, fontFamily:"'Segoe UI',system-ui,sans-serif" }}>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        .leave-card{transition:box-shadow .18s;}
+        .leave-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)!important;}
+        .filter-btn{transition:all .15s;border:none;cursor:pointer;font-weight:600;font-size:13px;border-radius:8px;padding:8px 16px;}
+        .action-btn{transition:all .15s;border:none;cursor:pointer;font-weight:600;font-size:12px;border-radius:8px;padding:7px 14px;display:flex;align-items:center;gap:5px;}
+        .action-btn:hover{opacity:.85;}
+      `}</style>
+
+      {/* ── Header ── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12, animation:'fadeUp .4s both' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestion des Congés</h1>
-          <p className="text-gray-600 mt-1">Demandes et suivi des congés</p>
+          <h1 style={{ fontSize:26, fontWeight:800, color:'#0f172a', margin:0, letterSpacing:'-0.02em' }}>Congés</h1>
+          <p style={{ color:'#64748b', fontSize:14, margin:'4px 0 0' }}>Demandes et suivi des absences</p>
         </div>
-        {/* CEO and RH cannot submit leave requests */}
-        {!isCEO && !isRH && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center space-x-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Nouvelle Demande</span>
+        {canSubmit && (
+          <button onClick={() => setModal('create')} style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', background:'linear-gradient(135deg,#4f46e5,#6366f1)', color:'#fff', border:'none', borderRadius:9, fontWeight:700, fontSize:14, cursor:'pointer', boxShadow:'0 4px 14px rgba(99,102,241,.35)' }}>
+            <Plus size={16} /> Nouvelle demande
           </button>
         )}
       </div>
 
-      {/* Stats Cards — hide for RH since they don't have personal leave */}
-      {!isRH && (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Congés Annuels</div>
-            <div className="text-2xl font-bold text-indigo-600 mt-1">{leaveStats?.annual_leave_total || 0}</div>
-            <div className="text-xs text-gray-500">Total</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Pris</div>
-            <div className="text-2xl font-bold text-orange-600 mt-1">{leaveStats?.annual_leave_taken || 0}</div>
-            <div className="text-xs text-gray-500">Jours</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Restants</div>
-            <div className="text-2xl font-bold text-green-600 mt-1">{leaveStats?.annual_leave_remaining || 0}</div>
-            <div className="text-xs text-gray-500">Jours</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Congés Maladie</div>
-            <div className="text-2xl font-bold text-red-600 mt-1">{leaveStats?.sick_leave_taken || 0}</div>
-            <div className="text-xs text-gray-500">Jours</div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="text-sm text-gray-600">Autres</div>
-            <div className="text-2xl font-bold text-purple-600 mt-1">{leaveStats?.other_leave_taken || 0}</div>
-            <div className="text-xs text-gray-500">Jours</div>
-          </div>
-        </div>
-      )}
+      {/* ── Stats cards — hidden for RH ── */}
+      {!isRH && !isCEO && leaveStats && (
 
-      {/* Pending Approvals banner — only for RH and managers, not CEO */}
-      {(isManager || isRH) && pendingRequests.length > 0 && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 mr-3" />
-            <div>
-              <h3 className="font-medium text-yellow-800">Demandes en attente</h3>
-              <p className="text-sm text-yellow-700 mt-1">
-                {pendingRequests.length} demande(s) de congé en attente d'approbation
-              </p>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:12, animation:'fadeUp .4s .05s both' }}>
+          {[
+            { label:'Droit annuel',  value: leaveStats.annual_leave_total||0,     color:'#6366f1', bg:'#eef2ff', border:'#c7d2fe' },
+            { label:'Jours pris',    value: leaveStats.annual_leave_taken||0,     color:'#f59e0b', bg:'#fffbeb', border:'#fde68a' },
+            { label:'Restants',      value: leaveStats.annual_leave_remaining||0, color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
+            { label:'Maladie',       value: leaveStats.sick_leave_taken||0,       color:'#dc2626', bg:'#fef2f2', border:'#fecaca' },
+            { label:'Autres',        value: leaveStats.other_leave_taken||0,      color:'#7c3aed', bg:'#faf5ff', border:'#ddd6fe' },
+          ].map((s, i) => (
+            <div key={i} style={{ background:s.bg, border:`1px solid ${s.border}`, borderRadius:12, padding:'14px 16px', textAlign:'center' }}>
+              <div style={{ fontSize:26, fontWeight:800, color:s.color, lineHeight:1 }}>{s.value}</div>
+              <div style={{ fontSize:11, fontWeight:600, color:'#64748b', marginTop:4 }}>{s.label}</div>
+            </div>
+          ))}
+          {/* Annual leave progress bar */}
+          <div style={{ background:'#fff', border:'1px solid #e2e8f0', borderRadius:12, padding:'14px 16px', gridColumn:'1 / -1' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
+              <span style={{ fontSize:12, fontWeight:700, color:'#64748b' }}>Utilisation congés annuels</span>
+              <span style={{ fontSize:12, fontWeight:700, color:'#6366f1' }}>
+                {leaveStats.annual_leave_taken||0} / {leaveStats.annual_leave_total||35} j
+              </span>
+            </div>
+            <div style={{ height:6, background:'#f1f5f9', borderRadius:99, overflow:'hidden' }}>
+              <div style={{ height:'100%', width:`${Math.min(((leaveStats.annual_leave_taken||0)/(leaveStats.annual_leave_total||35))*100,100)}%`, background:'linear-gradient(90deg,#6366f1,#818cf8)', borderRadius:99, transition:'width .6s ease' }} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Filter tabs */}
-      <div className="flex space-x-2">
-        {['all', 'pending', 'approved', 'rejected'].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg transition ${
-              filter === f ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {f === 'all' ? 'Toutes' : f.charAt(0).toUpperCase() + f.slice(1)}
+      {/* ── Pending alert — for RH and managers ── */}
+      {canReview && pendingRequests.length > 0 && (
+        <div style={{ display:'flex', alignItems:'center', gap:12, background:'#fffbeb', border:'1px solid #fde68a', borderLeft:'4px solid #f59e0b', borderRadius:12, padding:'14px 18px', animation:'fadeUp .4s .1s both' }}>
+          <AlertCircle size={18} color="#d97706" style={{ flexShrink:0 }} />
+          <div>
+            <strong style={{ fontSize:14, color:'#92400e' }}>
+              {pendingRequests.length} demande{pendingRequests.length>1?'s':''} en attente d'approbation
+            </strong>
+            <p style={{ fontSize:13, color:'#b45309', margin:'2px 0 0' }}>Consultez la liste ci-dessous pour traiter les demandes.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Filter tabs ── */}
+      <div style={{ display:'flex', gap:8, flexWrap:'wrap', animation:'fadeUp .4s .12s both' }}>
+        {FILTERS.map(f => (
+          <button key={f.key} className="filter-btn" onClick={() => setFilter(f.key)}
+            style={{ background: filter===f.key ? 'linear-gradient(135deg,#4f46e5,#6366f1)' : '#fff', color: filter===f.key ? '#fff' : '#64748b', boxShadow: filter===f.key ? '0 4px 12px rgba(99,102,241,.25)' : 'none', border: filter===f.key ? 'none' : '1px solid #e2e8f0' }}>
+            {f.label}
+            {f.count > 0 && (
+              <span style={{ marginLeft:6, background: filter===f.key ? 'rgba(255,255,255,0.25)' : '#f1f5f9', color: filter===f.key ? '#fff' : '#64748b', borderRadius:20, padding:'1px 7px', fontSize:11, fontWeight:700 }}>
+                {f.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Requests List */}
-      <div className="space-y-4">
-        {filteredRequests.map((request) => (
-          <div key={request.request_id} className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h3 className="text-lg font-bold text-gray-900">{request.employee_name}</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${getLeaveTypeColor(request.leave_type)}`}>
-                    {request.leave_type}
-                  </span>
-                  {getStatusBadge(request.status)}
-                </div>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    <span>{request.start_date} → {request.end_date}</span>
+      {/* ── Request cards ── */}
+      <div style={{ display:'flex', flexDirection:'column', gap:10, animation:'fadeUp .4s .15s both' }}>
+        {filtered.map((req, i) => (
+          <div key={req.request_id} className="leave-card" style={{ background:'#fff', borderRadius:14, border:'1px solid #f1f5f9', padding:'18px 20px', boxShadow:'0 1px 3px rgba(0,0,0,.05)' }}>
+            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+
+              {/* Left */}
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8, flexWrap:'wrap' }}>
+                  {/* Avatar */}
+                  <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#e0e7ff,#c7d2fe)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, color:'#4f46e5', flexShrink:0 }}>
+                    {(req.employee_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('')}
                   </div>
-                  <div className="font-medium text-indigo-600">{request.total_days} jour(s)</div>
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14, color:'#0f172a' }}>{req.employee_name}</div>
+                    <div style={{ fontSize:11, color:'#94a3b8' }}>{req.request_id}</div>
+                  </div>
+                  <TypeBadge type={req.leave_type} />
+                  <StatusBadge status={req.status} />
                 </div>
-                {request.reason && (
-                  <div className="mt-2 text-sm text-gray-700">
-                    <span className="font-medium">Raison:</span> {request.reason}
+
+                <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:13, color:'#64748b' }}>
+                    <Calendar size={13} color="#94a3b8" />
+                    <span>{req.start_date}</span>
+                    <span style={{ color:'#cbd5e1' }}>→</span>
+                    <span>{req.end_date}</span>
+                  </div>
+                  <div style={{ background:'#eef2ff', color:'#4f46e5', borderRadius:20, padding:'2px 10px', fontSize:12, fontWeight:700 }}>
+                    {req.total_days} jour{req.total_days>1?'s':''}
+                  </div>
+                </div>
+
+                {req.reason && (
+                  <div style={{ marginTop:8, fontSize:13, color:'#64748b', background:'#f8fafc', borderRadius:8, padding:'7px 10px' }}>
+                    💬 {req.reason}
                   </div>
                 )}
-                {request.review_comment && (
-                  <div className="mt-2 p-2 bg-gray-50 rounded text-sm">
-                    <span className="font-medium">Commentaire:</span> {request.review_comment}
+                {req.review_comment && (
+                  <div style={{ marginTop:6, fontSize:13, color:'#64748b', background:'#f0fdf4', borderRadius:8, padding:'7px 10px', borderLeft:'3px solid #16a34a' }}>
+                    📝 {req.review_comment}
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex space-x-2 mt-4 pt-4 border-t">
-              {request.status === 'Pending' && (
-                <>
-                  {/* ✅ Only RH and managers can approve/reject — CEO removed */}
-                  {(isRH || (isManager && user.supervised_employees?.includes(request.employee_id))) && (
+              {/* Actions */}
+              {req.status === 'Pending' && (
+                <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+                  {canReview && (isRH || (isManager && user.supervised_employees?.includes(req.employee_id))) && (
                     <>
-                      <button
-                        onClick={() => openReviewModal(request, 'approve')}
-                        className="flex items-center space-x-1 bg-green-50 text-green-600 px-4 py-2 rounded hover:bg-green-100 transition"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Approuver</span>
+                      <button className="action-btn" onClick={() => { setModal({ mode:'review', request:req, action:'approve' }); setReviewComment(''); }}
+                        style={{ background:'#f0fdf4', color:'#16a34a' }}>
+                        <CheckCircle size={13} /> Approuver
                       </button>
-                      <button
-                        onClick={() => openReviewModal(request, 'reject')}
-                        className="flex items-center space-x-1 bg-red-50 text-red-600 px-4 py-2 rounded hover:bg-red-100 transition"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        <span>Rejeter</span>
+                      <button className="action-btn" onClick={() => { setModal({ mode:'review', request:req, action:'reject' }); setReviewComment(''); }}
+                        style={{ background:'#fef2f2', color:'#dc2626' }}>
+                        <XCircle size={13} /> Rejeter
                       </button>
                     </>
                   )}
-                  {/* Employee can cancel their own request */}
-                  {request.employee_id === user.employee_id && (
-                    <button
-                      onClick={() => handleCancel(request.request_id)}
-                      className="flex items-center space-x-1 bg-gray-50 text-gray-600 px-4 py-2 rounded hover:bg-gray-100 transition"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      <span>Annuler</span>
+                  {req.employee_id === user.employee_id && (
+                    <button className="action-btn" onClick={() => handleCancel(req.request_id)}
+                      style={{ background:'#f8fafc', color:'#64748b', border:'1px solid #e2e8f0' }}>
+                      <X size={13} /> Annuler
                     </button>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>
         ))}
 
-        {filteredRequests.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">Aucune demande de congé trouvée</p>
+        {filtered.length === 0 && (
+          <div style={{ textAlign:'center', padding:'48px 0', background:'#fff', borderRadius:14, border:'1px solid #f1f5f9' }}>
+            <Calendar size={48} color="#e2e8f0" style={{ margin:'0 auto 12px', display:'block' }} />
+            <p style={{ color:'#94a3b8', fontSize:15, fontWeight:600 }}>Aucune demande trouvée</p>
           </div>
         )}
       </div>
 
-      {/* Create Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Nouvelle Demande de Congé</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
+      {/* ── Create Modal ── */}
+      {modal === 'create' && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div style={{ background:'#fff', borderRadius:18, width:'100%', maxWidth:460, boxShadow:'0 32px 80px rgba(0,0,0,.2)', overflow:'hidden' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 24px', borderBottom:'1px solid #f1f5f9' }}>
+              <div>
+                <h2 style={{ fontSize:17, fontWeight:800, color:'#0f172a', margin:0 }}>📅 Nouvelle demande de congé</h2>
+                <p style={{ fontSize:13, color:'#64748b', margin:'3px 0 0' }}>Remplissez les informations ci-dessous</p>
+              </div>
+              <button onClick={() => setModal(null)} style={{ width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'#f8fafc', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <X size={15} color="#64748b" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            <div style={{ padding:'20px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+              {/* Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type de Congé *</label>
-                <select
-                  value={formData.leave_type}
-                  onChange={(e) => setFormData({ ...formData, leave_type: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  required
-                >
-                  <option value="Annual">Congé Annuel</option>
-                  <option value="Sick">Congé Maladie</option>
-                  <option value="Personal">Congé Personnel</option>
-                  <option value="Emergency">Urgence</option>
-                </select>
+                <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Type de congé *</label>
+                <div style={{ position:'relative' }}>
+                  <select value={formData.leave_type} onChange={e=>setFormData(f=>({...f,leave_type:e.target.value}))}
+                    style={{ ...inputStyle, paddingRight:30, appearance:'none', cursor:'pointer' }}>
+                    <option value="Annual">Congé Annuel</option>
+                    <option value="Sick">Congé Maladie</option>
+                    <option value="Personal">Congé Personnel</option>
+                    <option value="Emergency">Urgence</option>
+                  </select>
+                  <ChevronDown size={13} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', color:'#94a3b8', pointerEvents:'none' }} />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date de Début *</label>
-                <input
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
+
+              {/* Dates */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                <div>
+                  <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Date de début *</label>
+                  <input type="date" value={formData.start_date} onChange={e=>setFormData(f=>({...f,start_date:e.target.value}))} style={inputStyle} required />
+                </div>
+                <div>
+                  <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Date de fin *</label>
+                  <input type="date" value={formData.end_date} onChange={e=>setFormData(f=>({...f,end_date:e.target.value}))} style={inputStyle} required />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date de Fin *</label>
-                <input
-                  type="date"
-                  value={formData.end_date}
-                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              {formData.start_date && formData.end_date && (
-                <div className="p-3 bg-indigo-50 rounded">
-                  <p className="text-sm text-indigo-800">
-                    <strong>Durée:</strong> {calculateDays(formData.start_date, formData.end_date)} jour(s)
-                  </p>
-                  {formData.leave_type === 'Annual' && leaveStats && (
-                    <p className="text-sm text-indigo-600 mt-1">
-                      Restant après: {leaveStats.annual_leave_remaining - calculateDays(formData.start_date, formData.end_date)} jour(s)
-                    </p>
-                  )}
+
+              {/* Duration preview */}
+              {days > 0 && (
+                <div style={{ background:'#eef2ff', border:'1px solid #c7d2fe', borderRadius:10, padding:'12px 14px' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <span style={{ fontSize:13, fontWeight:700, color:'#4f46e5' }}>📊 Durée : {days} jour{days>1?'s':''}</span>
+                    {formData.leave_type === 'Annual' && leaveStats && (
+                      <span style={{ fontSize:12, color:'#6366f1' }}>
+                        Restant après : <strong>{leaveStats.annual_leave_remaining - days}j</strong>
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
+
+              {/* Reason */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Raison</label>
-                <textarea
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                  rows="3"
-                  placeholder="Optionnel..."
-                ></textarea>
+                <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>Raison (optionnel)</label>
+                <textarea value={formData.reason} onChange={e=>setFormData(f=>({...f,reason:e.target.value}))}
+                  rows={3} placeholder="Décrivez la raison de votre demande..." style={{ ...inputStyle, resize:'vertical' }} />
               </div>
-              <div className="flex space-x-3 pt-4">
-                <button type="submit" className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
-                  Soumettre
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition">
-                  Annuler
-                </button>
-              </div>
-            </form>
+            </div>
+
+            <div style={{ padding:'16px 24px', borderTop:'1px solid #f1f5f9', display:'flex', gap:10 }}>
+              <button onClick={() => setModal(null)} style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', color:'#64748b', fontWeight:600, fontSize:14, cursor:'pointer' }}>
+                Annuler
+              </button>
+              <button onClick={handleSubmit} disabled={saving} style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background:'linear-gradient(135deg,#4f46e5,#6366f1)', color:'#fff', fontWeight:700, fontSize:14, cursor:saving?'not-allowed':'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, opacity:saving?.7:1 }}>
+                <Save size={14} />
+                {saving ? 'Envoi...' : 'Soumettre la demande'}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Review Modal */}
-      {showReviewModal && selectedRequestForReview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
-                {reviewAction === 'approve' ? 'Approuver' : 'Rejeter'} la demande
+      {/* ── Review Modal ── */}
+      {modal?.mode === 'review' && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20, backdropFilter:'blur(4px)' }}>
+          <div style={{ background:'#fff', borderRadius:18, width:'100%', maxWidth:440, boxShadow:'0 32px 80px rgba(0,0,0,.2)', overflow:'hidden' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'20px 24px', borderBottom:'1px solid #f1f5f9' }}>
+              <h2 style={{ fontSize:17, fontWeight:800, color:'#0f172a', margin:0 }}>
+                {modal.action === 'approve' ? '✅ Approuver la demande' : '❌ Rejeter la demande'}
               </h2>
-              <button onClick={() => setShowReviewModal(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
+              <button onClick={() => setModal(null)} style={{ width:32, height:32, borderRadius:8, border:'1px solid #e2e8f0', background:'#f8fafc', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <X size={15} color="#64748b" />
               </button>
             </div>
-            <div className="mb-4 p-4 bg-gray-50 rounded">
-              <p className="text-sm"><strong>Employé:</strong> {selectedRequestForReview.employee_name}</p>
-              <p className="text-sm"><strong>Type:</strong> {selectedRequestForReview.leave_type}</p>
-              <p className="text-sm"><strong>Période:</strong> {selectedRequestForReview.start_date} → {selectedRequestForReview.end_date}</p>
-              <p className="text-sm"><strong>Durée:</strong> {selectedRequestForReview.total_days} jour(s)</p>
+
+            <div style={{ padding:'20px 24px', display:'flex', flexDirection:'column', gap:14 }}>
+              {/* Request summary */}
+              <div style={{ background:'#f8fafc', borderRadius:10, padding:'14px 16px', display:'flex', flexDirection:'column', gap:7 }}>
+                {[
+                  { label:'Employé',  value: modal.request.employee_name },
+                  { label:'Type',     value: modal.request.leave_type },
+                  { label:'Période',  value: `${modal.request.start_date} → ${modal.request.end_date}` },
+                  { label:'Durée',    value: `${modal.request.total_days} jour${modal.request.total_days>1?'s':''}` },
+                ].map((r,i) => (
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                    <span style={{ color:'#94a3b8', fontWeight:600 }}>{r.label}</span>
+                    <span style={{ color:'#0f172a', fontWeight:700 }}>{r.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Comment */}
+              <div>
+                <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:5 }}>
+                  Commentaire {modal.action === 'reject' && <span style={{ color:'#ef4444' }}>*</span>}
+                </label>
+                <textarea value={reviewComment} onChange={e=>setReviewComment(e.target.value)}
+                  rows={3} placeholder={modal.action === 'approve' ? 'Optionnel...' : 'Raison du rejet (requis)'}
+                  style={{ ...inputStyle, resize:'vertical' }} />
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Commentaire {reviewAction === 'reject' && <span className="text-red-600">*</span>}
-              </label>
-              <textarea
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
-                rows="3"
-                placeholder={reviewAction === 'approve' ? 'Optionnel...' : 'Raison du rejet (requis)'}
-              ></textarea>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleReviewSubmit}
-                className={`flex-1 text-white py-2 rounded-lg transition ${
-                  reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {reviewAction === 'approve' ? 'Approuver' : 'Rejeter'}
-              </button>
-              <button onClick={() => setShowReviewModal(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition">
+
+            <div style={{ padding:'16px 24px', borderTop:'1px solid #f1f5f9', display:'flex', gap:10 }}>
+              <button onClick={() => setModal(null)} style={{ padding:'10px 20px', borderRadius:8, border:'1px solid #e2e8f0', background:'#fff', color:'#64748b', fontWeight:600, fontSize:14, cursor:'pointer' }}>
                 Annuler
+              </button>
+              <button onClick={handleReview} disabled={saving}
+                style={{ flex:1, padding:'10px', borderRadius:8, border:'none', background: modal.action==='approve' ? 'linear-gradient(135deg,#16a34a,#22c55e)' : 'linear-gradient(135deg,#dc2626,#ef4444)', color:'#fff', fontWeight:700, fontSize:14, cursor:saving?'not-allowed':'pointer', opacity:saving?.7:1 }}>
+                {saving ? 'Traitement...' : modal.action === 'approve' ? 'Confirmer l\'approbation' : 'Confirmer le rejet'}
               </button>
             </div>
           </div>

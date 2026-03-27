@@ -1,0 +1,165 @@
+{
+  "name": "ERP Daily Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/tasks",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_ERP_ADMIN_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [200, 0],
+      "typeVersion": 4.1
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:8000/kpis",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_ERP_ADMIN_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Get KPIs",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 0],
+      "typeVersion": 4.1
+    },
+    {
+      "parameters": {
+        "jsCode": "const tasks = $('Get Tasks').item.json || [];\nconst kpis = $('Get KPIs').item.json || [];\n\nconst delayedProjects = kpis.filter(p => p.schedule_variance_days > 0).map(p => p.project_id);\nconst problemTasks = tasks.filter(t => \n  (t.status === 'Blocked') || \n  (t.status !== 'Done' && delayedProjects.includes(t.project_id))\n);\n\nif (problemTasks.length === 0) return [];\n\nreturn problemTasks.map(t => ({\n  json: { \n    taskId: t.task_id, \n    title: t.title, \n    assignee: t.assigned_to, \n    status: t.status, \n    projectId: t.project_id \n  }\n}));"
+      },
+      "name": "Filter Anomalies",
+      "type": "n8n-nodes-base.code",
+      "position": [600, 0],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "llama3-8b-8192",
+        "messages": {
+          "messageValues": [
+            {
+              "content": "Tu es l'assistant IA de l'ERP. Rédige une alerte proactive très courte en français (1 phrase maximum) pour l'employé responsable de la tâche : {{$json.title}} (Projet {{$json.projectId}}). La tâche est en statut {{$json.status}} et le projet est potentiellement en retard. Dis-lui de débloquer ou prioriser la situation."
+            }
+          ]
+        }
+      },
+      "name": "Groq LLM",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [800, 0],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/chat/alerts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "employee_id",
+              "value": "={{$json.assignee}}"
+            },
+            {
+              "name": "message",
+              "value": "={{$json.response}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Push Alert to Chatbot",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1000, 0],
+      "typeVersion": 4.1
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tasks": {
+      "main": [
+        [
+          {
+            "node": "Get KPIs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get KPIs": {
+      "main": [
+        [
+          {
+            "node": "Filter Anomalies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Anomalies": {
+      "main": [
+        [
+          {
+            "node": "Groq LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq LLM": {
+      "main": [
+        [
+          {
+            "node": "Push Alert to Chatbot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -96,12 +96,11 @@ export const deleteEmployee  = (id)       => api.delete(`/employees/${id}`);
 // No API calls needed here.
 
 // ─── KPIs ────────────────────────────────────────────────────────────────────
-export const getKPIs        = ()          => api.get('/kpis');
+export const getKPIs        = ()          => api.get('/kpis', { params: { history: true } });
 export const getProjectKPIs = (pid)       => api.get(`/kpis/project/${pid}`);
 export const createKPI      = (data)      => api.post('/kpis', data);
 export const updateKPI      = (id, data)  => api.put(`/kpis/${id}`, data);
 export const deleteKPI      = (id)        => api.delete(`/kpis/${id}`);
-
 // ─── Reports ─────────────────────────────────────────────────────────────────
 export const getReports     = (type) => api.get('/reports', { params: type ? { report_type: type } : {} });
 export const generateReport = (data) => api.post('/reports/generate', data);
@@ -147,5 +146,14 @@ export const getStats          = () => api.get('/stats/summary');
 export const getTaskStats      = () => api.get('/stats/tasks');
 export const getEquipmentStats = () => api.get('/stats/equipment');
 export const getIssueStats     = () => api.get('/stats/issues');
+
+// ─── Whitelist ───────────────────────────────────────────────────────────────
+export const getWhitelist     = ()         => api.get('/whitelist');
+export const createWhitelist  = (data)     => api.post('/whitelist', data);
+export const updateWhitelist  = (id, data) => api.put(`/whitelist/${id}`, data);
+export const deleteWhitelist  = (id)       => api.delete(`/whitelist/${id}`);
+
+// ─── Logs ────────────────────────────────────────────────────────────────────
+export const getActivityLogs  = (params)   => api.get('/activity-logs', { params });
 
 export default api;

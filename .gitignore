@@ -1,15 +1,43 @@
-# Create .gitignore
-@"
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Environment
 .env
+
+# Databases
 *.db
 *.sqlite
 erp_chroma_db/
-node_modules/
-.vscode/
-"@ | Out-File -Encoding utf8 .gitignore
 
-git add .gitignore
-git commit -m "add .gitignore"
-git push
+# Frontend dependencies & build artifacts
+node_modules/
+build/
+
+# IDE
+.vscode/
+
+# Test & debug scripts (not for supervisor review)
+test_*.py
+verify_*.py
+debug_*.py
+check.py
+inspect_db.py
+fix_whitelist.py
+update_whitelist.py
+admin_setup.py
+
+# Output / log files
+inspect_results.txt
+build_output.txt
+build_output_utf8.txt
+eslint_output.txt
+eslint_output_utf8.txt
+
+# RAG test
+erp-backend/rag_engine/test_rag.py
+
+# Root-level DB copy
+erp_database.db

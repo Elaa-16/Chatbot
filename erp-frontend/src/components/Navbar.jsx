@@ -17,6 +17,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showAI, setShowAI] = useState(false);
+  const [proactiveAlerts, setProactiveAlerts] = useState([]);
+  const [alertsSeen, setAlertsSeen] = useState(false);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -27,12 +29,39 @@ const Navbar = () => {
         console.error('Error fetching unread notifications:', error);
       }
     };
+    
+    const fetchProactive = async () => {
+      try {
+        const response = await api.get('/chat/proactive');
+        if (response.data.alerts && response.data.alerts.length > 0) {
+          setProactiveAlerts(prev => {
+             const existing = new Set(prev.map(p => p.id));
+             const newItems = response.data.alerts.filter(a => !existing.has(a.id));
+             if (newItems.length > 0) setAlertsSeen(false);
+             return [...prev, ...newItems];
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching proactive alerts:', error);
+      }
+    };
+
     if (user) {
       fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 30000);
+      fetchProactive(); // Let backend determine what alerts they get
+      
+      const interval = setInterval(() => {
+        fetchUnreadCount();
+        fetchProactive();
+      }, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  const handleOpenAI = () => {
+    setShowAI(true);
+    setAlertsSeen(true);
+  };
 
   const handleLogout = () => {
     logout();
@@ -40,16 +69,18 @@ const Navbar = () => {
   };
 
   const allNavItems = [
-    { path: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo', 'manager', 'employee'] },
+    { path: '/dashboard',      label: 'Dashboard',    icon: LayoutDashboard, roles: ['ceo', 'manager', 'employee', 'admin'] },
     { path: '/projects',       label: 'Projets',       icon: FolderKanban,    roles: ['ceo', 'manager', 'employee'] },
     { path: '/tasks',          label: 'Tâches',        icon: CheckSquare,     roles: ['ceo', 'manager', 'employee'] },
     { path: '/issues',         label: 'Incidents',     icon: AlertTriangle,   roles: ['ceo', 'manager', 'employee'] },
     { path: '/reports',        label: 'Rapports',      icon: FileBarChart,    roles: ['ceo', 'manager'] },
     { path: '/clients',        label: 'Clients',       icon: Briefcase,       roles: ['ceo', 'manager'] },
-    { path: '/employees',      label: 'Employés',      icon: Users,           roles: ['ceo', 'manager', 'rh'] },
+    { path: '/employees',      label: 'Employés',      icon: Users,           roles: ['ceo', 'manager', 'rh', 'admin'] },
     { path: '/kpis',           label: 'KPIs',          icon: BarChart3,       roles: ['ceo', 'manager'] },
     { path: '/leave-requests', label: 'Congés',        icon: Calendar,        roles: ['ceo', 'manager', 'employee', 'rh'] },
-    { path: '/notifications',  label: 'Notifications', icon: Bell,            roles: ['ceo', 'manager', 'employee', 'rh'], badge: unreadCount },
+    { path: '/notifications',  label: 'Notifications', icon: Bell,            roles: ['ceo', 'manager', 'employee', 'rh', 'admin'], badge: unreadCount },
+    { path: '/whitelist',      label: 'API Whitelist', icon: Shield,          roles: ['admin'] },
+    { path: '/logs',           label: 'Journaux (Logs)',icon: FileBarChart,   roles: ['admin'] },
   ];
 
   const navItems = allNavItems.filter(item => item.roles.includes(user?.role));
@@ -59,6 +90,7 @@ const Navbar = () => {
     manager:  { gradient: 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)', label: 'Manager', icon: Shield,      description: "Gestion d'équipe" },
     employee: { gradient: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)', label: 'Employé', icon: UserCircle,  description: 'Accès standard'   },
     rh:       { gradient: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)', label: 'RH',      icon: Users,       description: 'Gestion RH'       },
+    admin:    { gradient: 'linear-gradient(135deg, #be123c 0%, #e11d48 100%)', label: 'Admin',   icon: Shield,      description: 'Administration'   },
   };
 
   const role = roleConfig[user?.role] || roleConfig.employee;
@@ -183,7 +215,7 @@ const Navbar = () => {
             </span>
 
             <button
-              onClick={() => setShowAI(true)}
+              onClick={handleOpenAI}
               title="Assistant IA"
               style={{
                 width: 58,
@@ -209,10 +241,15 @@ const Navbar = () => {
               }}
             >
               <Bot size={26} color="#fff" strokeWidth={1.8} />
+              {proactiveAlerts.length > 0 && !alertsSeen && (
+                <span style={{ position: 'absolute', top: -4, right: -4, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #1e293b' }}>
+                  {proactiveAlerts.length > 9 ? '9+' : proactiveAlerts.length}
+                </span>
+              )}
             </button>
           </div>
 
-          {showAI && <AIAssistant onClose={() => setShowAI(false)} />}
+          {showAI && <AIAssistant onClose={() => setShowAI(false)} proactiveAlerts={proactiveAlerts} />}
         </>
       )}
     </>

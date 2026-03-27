@@ -56,13 +56,13 @@ def create_project(project: ProjectCreate, user: dict = Depends(authenticate_wit
     cursor.execute("""
         INSERT INTO projects (
             project_id, project_name, project_type, client_name, start_date, end_date,
-            status, budget_eur, actual_cost_eur, completion_percentage, location,
+            status, budget, actual_cost, completion_percentage, location,
             project_manager_id, site_supervisor_id, description, assigned_employees
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         project.project_id, project.project_name, project.project_type, project.client_name,
-        project.start_date, project.end_date, project.status, project.budget_eur,
-        project.actual_cost_eur, project.completion_percentage, project.location,
+        project.start_date, project.end_date, project.status, project.budget,
+        project.actual_cost, project.completion_percentage, project.location,
         project.project_manager_id, project.site_supervisor_id, project.description,
         project.assigned_employees
     ))

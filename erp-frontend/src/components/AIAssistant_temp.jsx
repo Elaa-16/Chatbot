@@ -6,7 +6,7 @@ import {
   BarChart2, Clock, Trash2, Users, AlertTriangle,
   CalendarOff, Wrench, TrendingUp, TrendingDown,
   CheckCircle2, Circle, Timer, Ban, Package,
-  Building2, ChevronRight, Activity
+  Building2, Activity, Download, Edit2
 } from 'lucide-react';
 
 const fontLink = document.createElement('link');
@@ -16,16 +16,33 @@ document.head.appendChild(fontLink);
 
 const SUGGESTIONS = ['Statut des projets', 'Budget total', 'Projets en retard', 'Employés en congé'];
 
+// ── FIX: relative time helper ─────────────────────────────────────────────────
+function formatConvDate(timestamp) {
+  if (!timestamp) return '';
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  if (diffDays === 0) return timeStr;
+  if (diffDays === 1) return `Hier ${timeStr}`;
+  return '';
+}
+
 const makeWelcomeMessage = () => ({
   id: 1, role: 'bot',
   content: "Bonjour. Je suis votre assistant IA pour le système ERP. Je peux analyser vos données, générer des rapports et répondre à toutes vos questions opérationnelles.",
   time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
 });
 
+// ── FIX: store timestamp on creation ─────────────────────────────────────────
 const makeNewConversation = () => ({
   id: Date.now(),
   title: 'Nouvelle conversation',
   preview: '',
+  timestamp: Date.now(),
   date: 'Maintenant',
   messages: [makeWelcomeMessage()],
 });
@@ -41,8 +58,6 @@ const getUserId = () => {
   }
 };
 
-// ─── Storage key helper ────────────────────────────────────────────────────────
-// FIX: single source of truth for the localStorage key — always user-scoped
 const getStorageKey = () => `erp_chat_conversations_${getUserId()}`;
 const getActiveKey  = () => `erp_chat_active_conv_${getUserId()}`;
 
@@ -68,9 +83,6 @@ const getBotResponse = async (userMessage, lastExchange = {}) => {
   } catch { return "Impossible de joindre le serveur."; }
 };
 
-// ═══════════════════════════════════════════════════════
-// DESIGN TOKENS
-// ═══════════════════════════════════════════════════════
 const STATUS_META = {
   'Approved':    { color: '#10b981', bg: 'rgba(16,185,129,0.12)', label: 'Approuvé',    icon: '✓' },
   'Pending':     { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', label: 'En attente',  icon: '◔' },
@@ -137,9 +149,6 @@ const ENDPOINT_META = {
   'STATS-LEAVE-CRITICAL-TASKS':   { icon: AlertTriangle,label: 'Congés + Critiques',  color: '#ef4444' },
 };
 
-// ═══════════════════════════════════════════════════════
-// BADGE
-// ═══════════════════════════════════════════════════════
 const Badge = ({ value, size = 'sm' }) => {
   const m = STATUS_META[value];
   if (!m) return <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono',monospace", color: '#94a3b8' }}>{value}</span>;
@@ -159,9 +168,6 @@ const Badge = ({ value, size = 'sm' }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// PROGRESS BAR
-// ═══════════════════════════════════════════════════════
 const ProgressBar = ({ pct, color, height = 5 }) => {
   const n = parseFloat(pct) || 0;
   const c = color || (n >= 80 ? '#10b981' : n >= 50 ? '#6366f1' : n >= 30 ? '#f59e0b' : '#ef4444');
@@ -175,9 +181,6 @@ const ProgressBar = ({ pct, color, height = 5 }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// BLOCK PARSER
-// ═══════════════════════════════════════════════════════
 const parsePipeLine = (line) => {
   const clean = line.replace(/^[\s\-•·]+/, '').trim();
   if (!clean) return null;
@@ -270,9 +273,6 @@ const parseBlock = (blockText) => {
   return { rawLabel, type: 'rows', count: count ?? rows.length, rows, bilanLine };
 };
 
-// ═══════════════════════════════════════════════════════
-// MANAGER-DELAYED BLOCK PARSER
-// ═══════════════════════════════════════════════════════
 const parseManagerDelayedBlock = (blockText) => {
   const lines = blockText.trim().split('\n');
   const headerMatch = lines[0].match(/^===\s*(.+?)\s*===$/);
@@ -316,9 +316,6 @@ const parseManagerDelayedBlock = (blockText) => {
   return { rawLabel: headerMatch[1], type: 'manager-delayed', managers };
 };
 
-// ═══════════════════════════════════════════════════════
-// CARD RENDERERS
-// ═══════════════════════════════════════════════════════
 const EmployeeCard = ({ row, C }) => {
   const nom    = row['Nom'] || row['_name'] || '';
   const poste  = row['Poste'] || row['Position'] || '';
@@ -331,16 +328,16 @@ const EmployeeCard = ({ row, C }) => {
 
   return (
     <div
-      style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 14px', borderRadius: 10, backgroundColor: C.cardBg, border: `1px solid ${C.border}`, transition: 'background .15s' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', borderRadius: 12, backgroundColor: C.cardBg, border: `1px solid ${C.border}`, transition: 'background .15s' }}
       onMouseEnter={e => e.currentTarget.style.backgroundColor = C.cardHover}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
-          width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+          width: 44, height: 44, borderRadius: 11, flexShrink: 0,
           backgroundColor: `${dColor}18`, border: `1.5px solid ${dColor}40`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, fontWeight: 700, color: dColor, fontFamily: "'Syne',sans-serif"
+          fontSize: 15, fontWeight: 700, color: dColor, fontFamily: "'Syne',sans-serif"
         }}>
           {initials || '?'}
         </div>
@@ -349,14 +346,14 @@ const EmployeeCard = ({ row, C }) => {
             {nom || '—'}
           </div>
           {poste && (
-            <div style={{ fontSize: 11.5, color: C.textMuted, marginTop: 1 }}>{poste}</div>
+            <div style={{ fontSize: 13.5, color: C.textMuted, marginTop: 2 }}>{poste}</div>
           )}
         </div>
         {dept && (
           <span style={{
-            fontSize: 10.5, fontWeight: 600, color: dColor,
+            fontSize: 12.5, fontWeight: 600, color: dColor,
             backgroundColor: `${dColor}14`, border: `1px solid ${dColor}30`,
-            borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0
+            borderRadius: 6, padding: '3px 10px', whiteSpace: 'nowrap', flexShrink: 0
           }}>
             {dept}
           </span>
@@ -392,11 +389,11 @@ const LeaveCard = ({ row, C }) => {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: ltColor, flexShrink: 0 }} />
-          {name && <span style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</span>}
-          {ltype && <span style={{ fontSize: 11, fontWeight: 600, color: ltColor, backgroundColor: `${ltColor}14`, borderRadius: 6, padding: '1px 7px', border: `1px solid ${ltColor}30` }}>{ltype}</span>}
+          {name && <span style={{ fontSize: 16, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</span>}
+          {ltype && <span style={{ fontSize: 13, fontWeight: 600, color: ltColor, backgroundColor: `${ltColor}14`, borderRadius: 6, padding: '2px 9px', border: `1px solid ${ltColor}30` }}>{ltype}</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          {days && <span style={{ fontSize: 11.5, color: C.textMuted, fontFamily: "'JetBrains Mono',monospace" }}>{days}j</span>}
+          {days && <span style={{ fontSize: 14, color: C.textMuted, fontFamily: "'JetBrains Mono',monospace" }}>{days}j</span>}
           {status && <Badge value={status} />}
         </div>
       </div>
@@ -419,7 +416,7 @@ const TaskCard = ({ row, C }) => {
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.3 }}>{title}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.4 }}>{title}</div>
           <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {assignee && <span style={{ fontSize: 11.5, color: C.textMuted }}>👤 {assignee}</span>}
             {project && <span style={{ fontSize: 11.5, color: C.textMuted }}>📁 {project}</span>}
@@ -447,7 +444,7 @@ const ProjectCard = ({ row, C }) => {
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
             {lieu && <span style={{ fontSize: 11.5, color: C.textMuted }}>📍 {lieu}</span>}
             {budget && <span style={{ fontSize: 11.5, color: C.textMuted }}>💰 {budget}</span>}
@@ -462,8 +459,8 @@ const ProjectCard = ({ row, C }) => {
 
 const KpiCard = ({ row, C }) => {
   const name   = row['_name'] || row['Projet'] || row['Project'] || '';
-  const retard = parseInt(row['Retard'] || '0');
-  const budget = parseFloat(row['Budget'] || '0');
+  const retard = parseInt((row['Retard actuel'] || row['Retard'] || '0j').replace('j',''));
+  const budget = parseFloat(row['Budget Δ'] || row['Budget'] || '0');
   const cpi    = parseFloat(row['CPI'] || '0');
   const spi    = parseFloat(row['SPI'] || '0');
   const risque = row['Risque'] || '';
@@ -478,7 +475,7 @@ const KpiCard = ({ row, C }) => {
       onMouseEnter={e => e.currentTarget.style.backgroundColor = C.cardHover}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontSize: 13.5, fontWeight: 700, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", flex: 1, minWidth: 0, marginRight: 8 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", flex: 1, minWidth: 0, marginRight: 8 }}>
           {name || '—'}
         </span>
         {risque && <Badge value={risque} />}
@@ -491,8 +488,8 @@ const KpiCard = ({ row, C }) => {
           { label: 'SPI',      value: spi.toFixed(2),      color: spi >= 1 ? '#10b981' : '#ef4444' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 7, backgroundColor: `${color}10` }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "'JetBrains Mono',monospace" }}>{value}</div>
-            <div style={{ fontSize: 9.5, color: C.textMuted, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color, fontFamily: "'JetBrains Mono',monospace" }}>{value}</div>
+            <div style={{ fontSize: 11, color: C.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
           </div>
         ))}
       </div>
@@ -514,7 +511,7 @@ const IssueCard = ({ row, C }) => {
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{title}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{title}</div>
           <div style={{ marginTop: 4, display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {cat && <span style={{ fontSize: 11, color: C.textMuted, backgroundColor: C.tagBg, padding: '1px 7px', borderRadius: 5 }}>{cat}</span>}
             {proj && <span style={{ fontSize: 11.5, color: C.textMuted }}>📁 {proj}</span>}
@@ -548,22 +545,22 @@ const ManagerCard = ({ row, C }) => {
           {name.split(' ').map(w => w[0]).filter(Boolean).slice(0,2).join('').toUpperCase()}
         </div>
         <div>
-          <div style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif" }}>{name}</div>
           <div style={{ fontSize: 11, color: dColor, marginTop: 1 }}>{dept}</div>
         </div>
         <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: C.textPrimary, fontFamily: "'JetBrains Mono',monospace" }}>{total}</div>
-          <div style={{ fontSize: 9.5, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>tâches</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: C.textPrimary, fontFamily: "'JetBrains Mono',monospace" }}>{total}</div>
+          <div style={{ fontSize: 12, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>tâches</div>
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
         <div style={{ padding: '6px 10px', borderRadius: 7, backgroundColor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#ef4444', fontFamily: "'JetBrains Mono',monospace" }}>{blocked}</div>
-          <div style={{ fontSize: 9.5, color: '#ef4444', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bloquées</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#ef4444', fontFamily: "'JetBrains Mono',monospace" }}>{blocked}</div>
+          <div style={{ fontSize: 12, color: '#ef4444', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Bloquées</div>
         </div>
         <div style={{ padding: '6px 10px', borderRadius: 7, backgroundColor: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#f43f5e', fontFamily: "'JetBrains Mono',monospace" }}>{critical}</div>
-          <div style={{ fontSize: 9.5, color: '#f43f5e', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Critiques</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#f43f5e', fontFamily: "'JetBrains Mono',monospace" }}>{critical}</div>
+          <div style={{ fontSize: 12, color: '#f43f5e', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Critiques</div>
         </div>
       </div>
       {avance && <div style={{ marginTop: 8 }}><ProgressBar pct={avance} /></div>}
@@ -619,13 +616,15 @@ const ManagerDelayedCard = ({ manager, C }) => {
 };
 
 const GenericCard = ({ row, C }) => {
-  const entries = Object.entries(row).filter(([k]) => !k.startsWith('_'));
+  const entries = Object.entries(row).filter(([k]) => 
+    !k.startsWith('_') && k !== 'ID' && k !== 'Role ERP'
+);
   const name = row['_name'];
   return (
     <div style={{ padding: '10px 14px', borderRadius: 10, backgroundColor: C.cardBg, border: `1px solid ${C.border}`, transition: 'background .15s' }}
       onMouseEnter={e => e.currentTarget.style.backgroundColor = C.cardHover}
       onMouseLeave={e => e.currentTarget.style.backgroundColor = C.cardBg}>
-      {name && <div style={{ fontSize: 13.5, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", marginBottom: 6 }}>{name}</div>}
+      {name && <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", marginBottom: 6 }}>{name}</div>}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px' }}>
         {entries.map(([k, v]) => {
           const isStatus = STATUS_META[v];
@@ -641,9 +640,6 @@ const GenericCard = ({ row, C }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// STATS SUMMARY
-// ═══════════════════════════════════════════════════════
 const StatsSummaryBlock = ({ stats, C }) => {
   const tiles = [
     { key: 'Projets total',  icon: Building2,    color: '#6366f1' },
@@ -672,9 +668,6 @@ const StatsSummaryBlock = ({ stats, C }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// BLOCK RENDERER
-// ═══════════════════════════════════════════════════════
 const BlockRenderer = ({ block, darkMode, C }) => {
   const canonicalLabel = normalizeLabel(block.rawLabel);
   const meta   = ENDPOINT_META[canonicalLabel] || { icon: Activity, label: block.rawLabel, color: '#6366f1' };
@@ -684,22 +677,53 @@ const BlockRenderer = ({ block, darkMode, C }) => {
   const isCrossed = block.rawLabel !== canonicalLabel && block.rawLabel.includes('(');
   const subtitle  = isCrossed ? block.rawLabel.match(/\((.+?)\)/)?.[1] : null;
 
-  const header = (count) => (
+  const exportToCSV = (rows, label) => {
+    if (!rows || !rows.length) return;
+    const keys = Array.from(new Set(rows.flatMap(r => Object.keys(r).filter(k => k !== '_type' && k !== '_id' && k !== '_name'))));
+    keys.unshift('Nom/Titre');
+    const csvContent = [
+      keys.join(';'),
+      ...rows.map(r => keys.map(k => {
+        let val = k === 'Nom/Titre' ? (r['_name'] || r['Nom'] || r['Titre'] || '') : (r[k] || '');
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }).join(';'))
+    ].join('\n');
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `export_${label.replace(/\s+/g, '_').toLowerCase()}.csv`;
+    link.click();
+  };
+
+  const header = (count, rowsToExport = null) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', marginBottom: 8, borderRadius: 10, backgroundColor: `${accent}0e`, border: `1px solid ${accent}20` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, backgroundColor: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: `${accent}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon size={13} color={accent} strokeWidth={2} />
         </div>
         <div>
-          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 12, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{meta.label}</span>
+          <span style={{ fontFamily: "'Syne',sans-serif", fontSize: 14, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{meta.label}</span>
           {subtitle && <div style={{ fontSize: 10, color: C.textMuted, marginTop: 1 }}>{subtitle}</div>}
         </div>
       </div>
-      {count != null && (
-        <span style={{ fontSize: 11, fontWeight: 600, color: accent, backgroundColor: `${accent}15`, borderRadius: 20, padding: '2px 10px', fontFamily: "'JetBrains Mono',monospace", border: `1px solid ${accent}25` }}>
-          {count} résultat{count > 1 ? 's' : ''}
-        </span>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {rowsToExport && rowsToExport.length > 0 && (
+          <button 
+            onClick={() => exportToCSV(rowsToExport, meta.label)}
+            title="Exporter en CSV"
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${accent}40`, color: accent, borderRadius: 6, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: "'Instrument Sans',sans-serif", transition: 'all 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = `${accent}15`}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <Download size={12} strokeWidth={2} /> Exporter
+          </button>
+        )}
+        {count != null && (
+          <span style={{ fontSize: 13, fontWeight: 600, color: accent, backgroundColor: `${accent}15`, borderRadius: 20, padding: '4px 14px', fontFamily: "'JetBrains Mono',monospace", border: `1px solid ${accent}25` }}>
+            {count} résultat{count > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
     </div>
   );
 
@@ -764,7 +788,7 @@ const BlockRenderer = ({ block, darkMode, C }) => {
 
     return (
       <div style={{ marginBottom: 8 }}>
-        {header(rows.length)}
+        {header(rows.length, rows)}
         {bilanLine && canonicalLabel === 'LEAVE-REQUESTS' && (
           <div style={{
             padding: '8px 14px', marginBottom: 8, borderRadius: 8,
@@ -787,9 +811,6 @@ const BlockRenderer = ({ block, darkMode, C }) => {
   return null;
 };
 
-// ═══════════════════════════════════════════════════════
-// MESSAGE CONTENT
-// ═══════════════════════════════════════════════════════
 const MessageContent = ({ text, darkMode, C }) => {
   if (!text || typeof text !== 'string') text = String(text ?? '');
 
@@ -833,13 +854,13 @@ const MessageContent = ({ text, darkMode, C }) => {
               if (numbered) return (
                 <div key={li} style={{ display: 'flex', gap: 8, marginBottom: 4, alignItems: 'flex-start' }}>
                   <span style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1, backgroundColor: `${C.accent}18`, color: C.accent, fontSize: 11, fontWeight: 700, fontFamily: "'JetBrains Mono',monospace", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{numbered[1]}</span>
-                  <span style={{ fontSize: 13.5, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.6 }}>
+                  <span style={{ fontSize: 16, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.75 }}>
                     {numbered[2].split(/(\*\*[^*]+\*\*)/).map((p, j) => p.startsWith('**') && p.endsWith('**') ? <strong key={j} style={{ fontWeight: 600, color: C.accent }}>{p.slice(2,-2)}</strong> : p)}
                   </span>
                 </div>
               );
               return (
-                <div key={li} style={{ fontSize: 13.5, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.65, marginBottom: 2 }}>
+                <div key={li} style={{ fontSize: 16, color: C.textPrimary, fontFamily: "'Instrument Sans',sans-serif", lineHeight: 1.75, marginBottom: 3 }}>
                   {line.split(/(\*\*[^*]+\*\*)/).map((p, j) => p.startsWith('**') && p.endsWith('**') ? <strong key={j} style={{ fontWeight: 600, color: C.accent }}>{p.slice(2,-2)}</strong> : p)}
                 </div>
               );
@@ -851,9 +872,6 @@ const MessageContent = ({ text, darkMode, C }) => {
   );
 };
 
-// ═══════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════
 const decodeJWT = (token) => {
   try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
   catch { return null; }
@@ -881,12 +899,8 @@ const getUserFromJWT = () => {
   return null;
 };
 
-// ═══════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════
-const AIAssistant = ({ onClose, user: userProp }) => {
+const AIAssistant = ({ onClose, user: userProp, proactiveAlerts = [] }) => {
 
-  // ── FIX 1: load from user-scoped key, default to first saved conversation ──
   const [conversations, setConversations] = useState(() => {
     try {
       const saved = localStorage.getItem(getStorageKey());
@@ -898,13 +912,10 @@ const AIAssistant = ({ onClose, user: userProp }) => {
     return [makeNewConversation()];
   });
 
-  // ── FIX 2: restore last active conversation id, not always the first ───────
   const [activeConvId, setActiveConvId] = useState(() => {
     try {
-      // Try to restore the last-active conversation
       const lastActive = localStorage.getItem(getActiveKey());
       if (lastActive) {
-        // Verify it still exists in the saved conversations
         const saved = localStorage.getItem(getStorageKey());
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -913,7 +924,6 @@ const AIAssistant = ({ onClose, user: userProp }) => {
           }
         }
       }
-      // Fallback: first conversation in the list
       const saved = localStorage.getItem(getStorageKey());
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -924,7 +934,7 @@ const AIAssistant = ({ onClose, user: userProp }) => {
   });
 
   const activeConv = conversations.find(c => c.id === activeConvId);
-  const messages   = activeConv?.messages || [];
+  const messages   = React.useMemo(() => activeConv?.messages || [], [activeConv?.messages]);
 
   const [input, setInput]               = useState('');
   const [isTyping, setIsTyping]         = useState(false);
@@ -932,37 +942,73 @@ const AIAssistant = ({ onClose, user: userProp }) => {
   const [darkMode, setDarkMode]         = useState(true);
   const [currentUser]                   = useState(() => userProp || getUserFromJWT() || { name: 'Ahmed Trabelsi', role: 'ceo', email: '' });
   const [searchQuery, setSearchQuery]   = useState('');
+  const [, setTick]                     = useState(0); // forces re-render for time labels
   const [isListening, setIsListening]   = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [micError, setMicError]         = useState('');
   const [inputFocused, setInputFocused] = useState(false);
 
-  // ── FIX 3: save to user-scoped key AND persist active conv id ───────────────
-  useEffect(() => {
-    try {
-      localStorage.setItem(getStorageKey(), JSON.stringify(conversations));
-    } catch {}
-  }, [conversations]);
+  const [editingMessageId, setEditingMessageId] = useState(null);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(getActiveKey(), String(activeConvId));
-    } catch {}
+    try { localStorage.setItem(getStorageKey(), JSON.stringify(conversations)); } catch {}
+  }, [conversations]);
+
+  // ── FIX: refresh time labels every 30s ───────────────────────────────────
+  useEffect(() => {
+    const timer = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem(getActiveKey(), String(activeConvId)); } catch {}
+    setEditingMessageId(null);
   }, [activeConvId]);
+
+  useEffect(() => {
+    if (proactiveAlerts && proactiveAlerts.length > 0 && activeConvId) {
+       setConversations(prev => {
+         const conv = prev.find(c => c.id === activeConvId);
+         if (!conv) return prev;
+         const existingIds = new Set(conv.messages.filter(m => m.alertId).map(m => m.alertId));
+         const newAlerts = proactiveAlerts.filter(a => !existingIds.has(a.id));
+         if (newAlerts.length === 0) return prev;
+         const messagesToAdd = newAlerts.map(a => ({
+           id: Date.now() + Math.random(),
+           alertId: a.id,
+           role: 'bot',
+           content: a.message,
+           time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+         }));
+         return prev.map(c => c.id === activeConvId ? { ...c, messages: [...c.messages, ...messagesToAdd] } : c);
+       });
+    }
+  }, [proactiveAlerts, activeConvId]);
 
   const messagesEndRef  = useRef(null);
   const fileInputRef    = useRef(null);
   const recognitionRef  = useRef(null);
   const lastExchangeRef = useRef({});
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
 
   const updateConv = (id, fn) => setConversations(prev => prev.map(c => c.id === id ? fn(c) : c));
+
+  // ── FIX: preserve timestamp, compute date from it ────────────────────────
   const addMessage = (convId, msg) => updateConv(convId, c => {
     const msgs = [...c.messages, msg];
     const firstUser = msgs.find(m => m.role === 'user');
     const title = firstUser ? (firstUser.content.length > 34 ? firstUser.content.slice(0,34)+'…' : firstUser.content) : c.title;
-    return { ...c, messages: msgs, title, preview: msg.role === 'user' ? msg.content.slice(0,55) : c.preview, date: 'Maintenant' };
+    const ts = c.timestamp || Date.now();
+    return {
+      ...c,
+      messages: msgs,
+      title,
+      preview: msg.role === 'user' ? msg.content.slice(0,55) : c.preview,
+      timestamp: ts,
+      date: formatConvDate(ts),
+    };
   });
 
   const createNewConversation = () => {
@@ -970,6 +1016,7 @@ const AIAssistant = ({ onClose, user: userProp }) => {
     setConversations(prev => [conv, ...prev]);
     setActiveConvId(conv.id);
     setInput('');
+    setEditingMessageId(null);
   };
 
   const deleteConversation = (id, e) => {
@@ -1006,8 +1053,33 @@ const AIAssistant = ({ onClose, user: userProp }) => {
     const msg = text || input.trim();
     if (!msg && attachedFiles.length === 0) return;
     const userMsg = { id: Date.now(), role: 'user', content: msg, files: [...attachedFiles], time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) };
-    addMessage(activeConvId, userMsg);
+    
+    let currentEditId = editingMessageId;
+    setEditingMessageId(null);
     setInput(''); setAttachedFiles([]); setIsTyping(true);
+
+    if (currentEditId) {
+      updateConv(activeConvId, c => {
+        let msgs = [...c.messages];
+        const idx = msgs.findIndex(m => m.id === currentEditId);
+        if (idx !== -1) msgs = msgs.slice(0, idx);
+        msgs.push(userMsg);
+        const firstUser = msgs.find(m => m.role === 'user');
+        const title = firstUser ? (firstUser.content.length > 34 ? firstUser.content.slice(0,34)+'…' : firstUser.content) : c.title;
+        const ts = c.timestamp || Date.now();
+        return {
+          ...c,
+          messages: msgs,
+          title,
+          preview: msg.slice(0,55),
+          timestamp: ts,
+          date: formatConvDate(ts),
+        };
+      });
+    } else {
+      addMessage(activeConvId, userMsg);
+    }
+    
     const reply = await getBotResponse(msg || 'fichier', lastExchangeRef.current);
     lastExchangeRef.current = { user: msg, assistant: reply };
     addMessage(activeConvId, { id: Date.now()+1, role: 'bot', content: reply, time: new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) });
@@ -1020,9 +1092,9 @@ const AIAssistant = ({ onClose, user: userProp }) => {
   );
 
   const containerStyle =
-    expandState === 'fullscreen' ? { width: '96vw', height: '94vh' } :
-    expandState === 'wide'       ? { width: '1020px', height: '680px' } :
-                                   { width: '860px', height: '660px' };
+    expandState === 'fullscreen' ? { width: '98vw', height: '96vh' } :
+    expandState === 'wide'       ? { width: '1200px', height: '800px' } :
+                                   { width: '1050px', height: '760px' };
 
   const C = darkMode ? {
     bg: '#0c0d12', surface: '#111318', border: 'rgba(255,255,255,0.07)', sidebar: '#0e0f15',
@@ -1085,7 +1157,7 @@ const AIAssistant = ({ onClose, user: userProp }) => {
       <div style={{ ...containerStyle, display:'flex', borderRadius:20, overflow:'hidden', boxShadow:C.shadow, border:`1px solid ${C.border}`, animation:'slideUp .32s cubic-bezier(.16,1,.3,1)', transition:'width .35s cubic-bezier(.16,1,.3,1),height .35s cubic-bezier(.16,1,.3,1)', backgroundColor:C.bg }}>
 
         {/* ── SIDEBAR ── */}
-        <div style={{ width:232, flexShrink:0, display:'flex', flexDirection:'column', backgroundColor:C.sidebar, borderRight:`1px solid ${C.border}`, position:'relative' }}>
+        <div style={{ width:270, flexShrink:0, display:'flex', flexDirection:'column', backgroundColor:C.sidebar, borderRight:`1px solid ${C.border}`, position:'relative' }}>
           <div style={{ position:'absolute', inset:0, pointerEvents:'none', backgroundImage:`radial-gradient(circle at 1px 1px,${darkMode?'rgba(255,255,255,0.022)':'rgba(0,0,0,0.022)'} 1px,transparent 0)`, backgroundSize:'22px 22px' }} />
           <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', height:'100%' }}>
             <div style={{ padding:'20px 18px 16px', borderBottom:`1px solid ${C.border}` }}>
@@ -1114,10 +1186,11 @@ const AIAssistant = ({ onClose, user: userProp }) => {
                   <div key={conv.id} className="conv-item" onClick={() => setActiveConvId(conv.id)} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 10px', marginBottom:2, backgroundColor: isActive ? C.accentSubtle : 'transparent', borderLeft:`2px solid ${isActive ? C.accent : 'transparent'}` }}>
                     <div style={{ flex:1, overflow:'hidden', minWidth:0 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', gap:4, marginBottom:3 }}>
-                        <span style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:13, fontWeight: isActive?600:500, color: isActive?C.accentText:C.textPrimary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', flex:1 }}>{conv.title}</span>
-                        <span style={{ fontSize:10, color:C.textMuted, flexShrink:0, fontFamily:"'JetBrains Mono',monospace" }}>{conv.date}</span>
+                        <span style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:14, fontWeight: isActive?600:500, color: isActive?C.accentText:C.textPrimary, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', flex:1 }}>{conv.title}</span>
+                        {/* ── FIX: use formatConvDate with stored timestamp ── */}
+                        <span style={{ fontSize:10, color:C.textMuted, flexShrink:0, fontFamily:"'JetBrains Mono',monospace" }}>{formatConvDate(conv.timestamp)}</span>
                       </div>
-                      {conv.preview && <span style={{ fontSize:11.5, color:C.textMuted, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', display:'block' }}>{conv.preview}</span>}
+                      {conv.preview && <span style={{ fontSize:13, color:C.textMuted, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', display:'block' }}>{conv.preview}</span>}
                     </div>
                     <button className="del-btn" onClick={(e) => deleteConversation(conv.id,e)} title="Supprimer"><Trash2 size={12}/></button>
                   </div>
@@ -1149,8 +1222,8 @@ const AIAssistant = ({ onClose, user: userProp }) => {
                 <div style={{ position:'absolute', bottom:-1, right:-1, width:11, height:11, borderRadius:'50%', backgroundColor:C.online, border:`2px solid ${C.surface}`, boxShadow:`0 0 8px ${C.online2}` }} />
               </div>
               <div>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:16, fontWeight:700, color:C.textPrimary }}>Assistant IA ERP</div>
-                <div style={{ fontSize:12, color:C.online, fontWeight:500, display:'flex', alignItems:'center', gap:5 }}>
+                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:18, fontWeight:700, color:C.textPrimary }}>Assistant IA ERP</div>
+                <div style={{ fontSize:13, color:C.online, fontWeight:500, display:'flex', alignItems:'center', gap:5 }}>
                   <span style={{ display:'inline-block', width:6, height:6, borderRadius:'50%', backgroundColor:C.online, animation:'onlinePulse 2s infinite' }}/>
                   En ligne · Répond instantanément
                 </div>
@@ -1178,7 +1251,7 @@ const AIAssistant = ({ onClose, user: userProp }) => {
                 <div className={msg.role==='bot'?'bot-bubble':''} style={{
                   maxWidth: msg.role==='user'?'68%':undefined,
                   ...(msg.role==='user' ? { background:C.userBubble, color:'#fff', borderRadius:'18px 18px 4px 18px', boxShadow:`0 4px 20px ${C.accentGlow}`, padding:'13px 17px' }
-                    : { backgroundColor:C.botBubble, color:C.textPrimary, borderRadius:'18px 18px 18px 4px', border:`1px solid ${C.botBorder}`, boxShadow: darkMode?'0 2px 14px rgba(0,0,0,0.35)':'0 2px 14px rgba(0,0,0,0.07)', padding:'14px 16px' }),
+                    : { backgroundColor:C.botBubble, color:C.textPrimary, borderRadius:'18px 18px 18px 4px', border:`1px solid ${C.botBorder}`, boxShadow: darkMode?'0 2px 14px rgba(0,0,0,0.35)':'0 2px 14px rgba(0,0,0,0.07)', padding:'16px 18px' }),
                 }}>
                   {msg.files?.length > 0 && (
                     <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginBottom:10 }}>
@@ -1192,7 +1265,18 @@ const AIAssistant = ({ onClose, user: userProp }) => {
                   )}
                   {msg.role==='bot'
                     ? <MessageContent text={msg.content} darkMode={darkMode} C={C} />
-                    : <div style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:14.5, lineHeight:1.65 }}>{msg.content}</div>
+                    : <div style={{ fontFamily:"'Instrument Sans',sans-serif", fontSize:16.5, lineHeight:1.75, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                        <span>{msg.content}</span>
+                        <button 
+                          onClick={() => { setInput(msg.content); setEditingMessageId(msg.id); setInputFocused(true); }}
+                          title="Modifier la question"
+                          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 2, display: 'flex' }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                      </div>
                   }
                   <div style={{ fontSize:11, marginTop:8, textAlign:'right', fontFamily:"'JetBrains Mono',monospace", color: msg.role==='user'?'rgba(255,255,255,0.4)':C.timeColor, display:'flex', alignItems:'center', justifyContent:'flex-end', gap:4 }}>
                     <Clock size={10} strokeWidth={2}/>{msg.time}
@@ -1242,12 +1326,12 @@ const AIAssistant = ({ onClose, user: userProp }) => {
             </div>
           )}
 
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'14px 16px', backgroundColor:C.surface, borderTop:`1px solid ${C.border}` }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'16px 18px', backgroundColor:C.surface, borderTop:`1px solid ${C.border}` }}>
             <input ref={fileInputRef} type="file" multiple style={{ display:'none' }} onChange={handleFileChange} accept="image/*,.pdf,.doc,.docx,.xlsx,.txt"/>
             <button className="icon-btn" onClick={() => fileInputRef.current?.click()} style={{ color: attachedFiles.length>0?C.accentText:C.textMuted }}><Paperclip size={19} strokeWidth={1.8}/></button>
             <button className="icon-btn" onClick={toggleMic} style={{ background: isListening?C.accentSubtle:'none', color: isListening?C.accentText:C.textMuted, animation: isListening?'micPulse 1.5s infinite':'none' }}><Mic size={19} strokeWidth={1.8}/></button>
             <div style={{ flex:1, borderRadius:12, border:`1.5px solid ${inputFocused?C.inputFocus:C.inputBorder}`, backgroundColor:C.inputBg, boxShadow: inputFocused?`0 0 0 3px ${C.accentSubtle}`:'none', transition:'all .2s' }}>
-              <input style={{ display:'block', width:'100%', padding:'12px 18px', fontFamily:"'Instrument Sans',sans-serif", fontSize:14.5, outline:'none', background:'none', border:'none', color:C.textPrimary, boxSizing:'border-box' }}
+              <input style={{ display:'block', width:'100%', padding:'12px 18px', fontFamily:"'Instrument Sans',sans-serif", fontSize:16, outline:'none', background:'none', border:'none', color:C.textPrimary, boxSizing:'border-box' }}
                 placeholder={isListening?'🎙 Écoute en cours...':'Posez votre question...'}
                 value={input}
                 onChange={e => setInput(e.target.value)}

@@ -1,0 +1,122 @@
+[
+  {
+    "metadata": {
+      "category": "internal_communication",
+      "folder": "emails",
+      "chunk_index": 0,
+      "source": "rag_documents\\emails\\note_rh_procedure_interne.txt",
+      "type": "internal_communication",
+      "filename": "note_rh_procedure_interne.txt",
+      "total_chunks": 2
+    },
+    "content": "NOTE DE SERVICE RH — PROCÉDURES INTERNES\nConstruction Tunisie — Département RH\n======================================\nRéf: RH-2026-003 | Date: 15 janvier 2026\nDe: Fatma Gharbi (DRH) | À: Tous les employés\n\nRAPPEL DES PROCÉDURES RH IMPORTANTES\n\n1. DEMANDE DE CONGÉ\n- Toute demande doit être soumise via l'ERP (module Congés)\n- Délai minimum: 15 jours pour congé ≥ 5 jours, 3 jours pour congé < 5 jours\n- Un employé NE PEUT PAS partir en congé s'il a des tâches critiques non assignées\n- En cas d'urgence: contacter directement le DRH\n\n2. ÉVALUATION DE PERFORMANCE\n- Évaluation annuelle: décembre de chaque année\n- Évaluation mi-parcours: juin de chaque année\n- Les KPIs projets sont pris en compte dans l'évaluation des chefs de projet\n- Toute mauvaise performance (3 mois consécutifs) déclenche un plan d'amélioration"
+  },
+  {
+    "metadata": {
+      "source": "rag_documents\\procedures\\gestion_incidents.txt",
+      "total_chunks": 4,
+      "type": "procedure",
+      "category": "procedure",
+      "folder": "procedures",
+      "filename": "gestion_incidents.txt",
+      "chunk_index": 0
+    },
+    "content": "PROCÉDURE DE GESTION DES INCIDENTS ET PROBLÈMES\nConstruction Tunisie ERP — Document Qualité\n==============================================\nVersion: 1.5 | Date: Janvier 2026\n\n1. DÉFINITION ET CATÉGORIES D'INCIDENTS\n-----------------------------------------\nUn incident est tout événement non planifié qui affecte ou pourrait affecter\nla qualité, le délai, le budget ou la sécurité d'un projet.\n\nCatégories dans le système ERP:\n  - Safety (Sécurité): accidents, quasi-accidents, conditions dangereuses\n  - Quality (Qualité): non-conformités, défauts de construction, rebus\n  - Delay (Retard): événements causant des retards sur le planning\n  - Budget (Budget): dépassements de coûts non prévus\n  - Technical (Technique): pannes, problèmes techniques, défaillances\n  - Other (Autre): tout incident ne rentrant pas dans les catégories ci-dessus"
+  },
+  {
+    "metadata": {
+      "chunk_index": 1,
+      "folder": "policies",
+      "total_chunks": 5,
+      "filename": "politique_conges.txt",
+      "source": "rag_documents\\policies\\politique_conges.txt",
+      "category": "policy",
+      "type": "policy"
+    },
+    "content": "1.4 Congé de paternité\n    - Durée: 3 jours ouvrables à partir de la naissance de l'enfant.\n    - À prendre dans les 15 jours suivant la naissance.\n\n1.5 Congé exceptionnel (événements familiaux)\n    - Mariage de l'employé: 5 jours\n    - Mariage d'un enfant: 2 jours\n    - Décès du conjoint ou d'un enfant: 5 jours\n    - Décès d'un parent (père, mère): 3 jours\n    - Décès d'un beau-parent: 2 jours\n    - Décès d'un frère ou sœur: 1 jour\n    - Circoncision d'un fils: 1 jour\n\n1.6 Congé sans solde\n    - Accordé exceptionnellement pour des raisons personnelles graves.\n    - Durée maximale: 30 jours par an.\n    - Doit être approuvé par le directeur de département et le DRH."
+  },
+  {
+    "metadata": {
+      "chunk_index": 3,
+      "source": "rag_documents\\policies\\securite_chantier.txt",
+      "category": "policy",
+      "folder": "policies",
+      "filename": "securite_chantier.txt",
+      "total_chunks": 6,
+      "type": "policy"
+    },
+    "content": "2.4 Retour au travail\n    - Autorisation médicale obligatoire avant reprise après tout accident\n    - Visite de reprise avec le médecin du travail si arrêt > 8 jours\n\n3. RÈGLES DE SÉCURITÉ GÉNÉRALES\n---------------------------------\n- Interdit de consommer de l'alcool ou des substances psychoactives sur chantier\n- Vitesse limitée à 10 km/h sur toute zone de chantier pour les véhicules\n- Tout engin doit être inspecté avant utilisation (check-list quotidienne)\n- Les zones de fouille et tranchées doivent être balisées et éclairées\n- Stockage correct des matériaux: pas de matériaux instables en hauteur\n- Les extincteurs doivent être accessibles et vérifiés tous les 6 mois\n- Plan d'évacuation affiché à l'entrée de chaque chantier"
+  },
+  {
+    "metadata": {
+      "type": "policy",
+      "folder": "policies",
+      "chunk_index": 2,
+      "source": "rag_documents\\policies\\politique_conges.txt",
+      "category": "policy",
+      "filename": "politique_conges.txt",
+      "total_chunks": 5
+    },
+    "content": "1.6 Congé sans solde\n    - Accordé exceptionnellement pour des raisons personnelles graves.\n    - Durée maximale: 30 jours par an.\n    - Doit être approuvé par le directeur de département et le DRH.\n\n2. PROCÉDURE DE DEMANDE DE CONGÉ\n----------------------------------\nÉtape 1: L'employé soumet sa demande via le système ERP (module Congés) au moins:\n    - 15 jours à l'avance pour les congés de 5 jours et plus.\n    - 3 jours à l'avance pour les congés de moins de 5 jours.\n    - Immédiatement pour les congés maladie et événements familiaux.\n\nÉtape 2: Le manager direct examine la demande dans un délai de 48 heures.\n    - Il vérifie la disponibilité de l'équipe et l'impact sur les projets en cours.\n    - Il approuve ou rejette la demande avec commentaire obligatoire en cas de rejet.\n\nÉtape 3: Le système ERP notifie automatiquement l'employé de la décision.\n\nÉtape 4: En cas de désaccord, l'employé peut faire appel auprès du DRH."
+  },
+  {
+    "metadata": {
+      "category": "policy",
+      "folder": "policies",
+      "filename": "politique_conges.txt",
+      "type": "policy",
+      "source": "rag_documents\\policies\\politique_conges.txt",
+      "total_chunks": 5,
+      "chunk_index": 3
+    },
+    "content": "Étape 3: Le système ERP notifie automatiquement l'employé de la décision.\n\nÉtape 4: En cas de désaccord, l'employé peut faire appel auprès du DRH.\n\n3. RÈGLES IMPORTANTES\n----------------------\n- Un employé ne peut pas partir en congé si des tâches critiques lui sont assignées, sauf arrangement préalable.\n- La direction peut rappeler un employé en congé en cas de force majeure (urgence sur chantier, etc.).\n- Toute absence non justifiée dans les 24h est considérée comme absence non autorisée.\n- Trois absences non autorisées consécutives peuvent mener à une procédure disciplinaire.\n\n4. SOLDE DE CONGÉS\n-------------------\n- Consultable à tout moment dans le système ERP (profil employé).\n- Le solde est mis à jour en temps réel après chaque approbation.\n- En fin d'année, le solde non utilisé est perdu (pas de report sauf exception approuvée)."
+  },
+  {
+    "metadata": {
+      "source": "rag_documents\\glossaire\\glossaire_metier_btp.txt",
+      "folder": "glossaire",
+      "type": "glossaire",
+      "filename": "glossaire_metier_btp.txt",
+      "category": "glossaire",
+      "chunk_index": 4,
+      "total_chunks": 12
+    },
+    "content": "Coffrage\n  Moule temporaire dans lequel on coule le béton. Retiré après durcissement.\n\nCongé annuel (annual_leave dans l'ERP)\n  annual_leave_total = jours accordés (35 jours standard)\n  annual_leave_taken = jours déjà pris\n  Solde restant = annual_leave_total - annual_leave_taken\n\n═══════════════════════════════════════════════════════════\nD\n═══════════════════════════════════════════════════════════\n\nDécompte\n  Document récapitulatif des travaux exécutés, servant de base à la facturation.\n  Établi périodiquement (mensuel en général) par le chef de projet.\n\nDélai contractuel\n  Date de livraison prévue dans le contrat de construction.\n  Tout dépassement peut entraîner des pénalités de retard.\n\n═══════════════════════════════════════════════════════════\nE\n═══════════════════════════════════════════════════════════"
+  },
+  {
+    "metadata": {
+      "total_chunks": 5,
+      "folder": "policies",
+      "source": "rag_documents\\policies\\politique_conges.txt",
+      "chunk_index": 0,
+      "category": "policy",
+      "filename": "politique_conges.txt",
+      "type": "policy"
+    },
+    "content": "POLITIQUE DE GESTION DES CONGÉS\nConstruction Tunisie ERP — Document RH officiel\n================================================\nVersion: 2.0 | Date: Janvier 2026\n\n1. TYPES DE CONGÉS ET DURÉES\n------------------------------\n1.1 Congé annuel payé\n    - Tous les employés permanents ont droit à 35 jours ouvrables de congé annuel.\n    - Les congés non pris ne peuvent pas être reportés à l'année suivante sauf accord écrit du DRH.\n    - Le calcul se fait sur la base de l'année civile (1er janvier au 31 décembre).\n\n1.2 Congé maladie\n    - Durée maximale: 30 jours par an avec maintien du salaire complet.\n    - Au-delà de 3 jours consécutifs, un certificat médical est obligatoire.\n    - Au-delà de 30 jours, le dossier est transmis à la CNSS pour étude.\n\n1.3 Congé de maternité\n    - Durée: 60 jours calendaires (30 jours avant l'accouchement + 30 jours après).\n    - Salaire maintenu à 100% pendant toute la durée.\n    - Extension possible de 15 jours sur présentation d'un certificat médical."
+  },
+  {
+    "metadata": {
+      "folder": "emails",
+      "total_chunks": 3,
+      "type": "internal_communication",
+      "category": "internal_communication",
+      "filename": "memo_reunion_fevrier2026.txt",
+      "source": "rag_documents\\emails\\memo_reunion_fevrier2026.txt",
+      "chunk_index": 2
+    },
+    "content": "4. ÉQUIPEMENTS\n---------------\nLa Bétonnière Mobile (EQ004) est en réparation (pompe défaillante).\nDélai estimé: 3 semaines. Les projets impactés doivent prévoir une solution de remplacement.\nContacter le fournisseur S003 (Équipement TP) pour location temporaire.\n\n5. PROCHAINE RÉUNION\n---------------------\nRéunion mensuelle de suivi projets: 15 Mars 2026 à 09h00, Salle de conférence A.\n\nAhmed Trabelsi\nCEO — Construction Tunisie"
+  },
+  {
+    "metadata": {
+      "folder": "procedures",
+      "filename": "gestion_equipements.txt",
+      "chunk_index": 1,
+      "type": "procedure",
+      "source": "rag_documents\\procedures\\gestion_equipements.txt",
+      "category": "procedure",
+      "total_chunks": 3
+    },
+    "content": "3. PLAN DE MAINTENANCE PRÉVENTIVE\n------------------------------------\n- Maintenance légère: tous les 3 mois (vérification niveaux, graissage)\n- Maintenance complète: tous les 6 mois (révision générale)\n- Contrôle technique: annuel (conformité réglementaire)\n- Tout équipement dont la prochaine maintenance est dépassée est automatiquement\n  mis en statut \"Maintenance\" dans le système ERP\n\n4. PROCÉDURE EN CAS DE PANNE\n------------------------------\nÉtape 1: Le conducteur signale la panne immédiatement au chef de chantier\nÉtape 2: Créer un incident dans le système ERP (catégorie \"Technical\")\nÉtape 3: L'équipement est mis en statut \"Maintenance\" dans l'ERP\nÉtape 4: Contacter le fournisseur S003 (Équipement TP) pour les engins lourds\nÉtape 5: Estimer le délai de réparation et informer le chef de projet\nÉtape 6: Si délai > 3 jours, chercher un équipement de remplacement disponible"
+  }
+]

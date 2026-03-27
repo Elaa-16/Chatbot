@@ -311,10 +311,10 @@ def create_purchase_order(po: PurchaseOrderCreate, user: dict = Depends(authenti
         raise HTTPException(status_code=400, detail="Purchase order ID already exists")
     cursor.execute("""
         INSERT INTO purchase_orders (po_id, supplier_id, project_id, order_date, delivery_date,
-            items_description, total_amount_eur, status, created_by, created_date, notes)
+            items_description, total_amount, status, created_by, created_date, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (po.po_id, po.supplier_id, po.project_id, po.order_date, po.delivery_date,
-          po.items_description, po.total_amount_eur, po.status, po.created_by,
+          po.items_description, po.total_amount, po.status, po.created_by,
           datetime.now().isoformat(), po.notes))
     log_action(cursor, user["employee_id"], "Create", "PurchaseOrder", po.po_id,
                f"Created PO {po.po_id} for project {po.project_id}")
@@ -375,9 +375,9 @@ def get_timesheets(employee_id: Optional[str] = None, project_id: Optional[str] 
     if employee_id: query += " AND employee_id = ?"; params.append(employee_id)
     if project_id: query += " AND project_id = ?"; params.append(project_id)
     if approved is not None: query += " AND approved = ?"; params.append(approved)
-    if date_from: query += " AND work_date >= ?"; params.append(date_from)
-    if date_to: query += " AND work_date <= ?"; params.append(date_to)
-    query += " ORDER BY work_date DESC"
+    if date_from: query += " AND date >= ?"; params.append(date_from)
+    if date_to: query += " AND date <= ?"; params.append(date_to)
+    query += " ORDER BY date DESC"
     cursor.execute(query, params)
     return [dict(ts) for ts in cursor.fetchall()]
 
@@ -397,8 +397,8 @@ def get_timesheet_summary(employee_id: Optional[str] = None, project_id: Optiona
     params = []
     if employee_id: query += " AND employee_id = ?"; params.append(employee_id)
     if project_id: query += " AND project_id = ?"; params.append(project_id)
-    if date_from: query += " AND work_date >= ?"; params.append(date_from)
-    if date_to: query += " AND work_date <= ?"; params.append(date_to)
+    if date_from: query += " AND date >= ?"; params.append(date_from)
+    if date_to: query += " AND date <= ?"; params.append(date_to)
     cursor.execute(query, params)
     s = cursor.fetchone()
     return {"total_hours": s["total_hours"] or 0, "billable_hours": s["billable_hours"] or 0,
@@ -414,10 +414,10 @@ def create_timesheet(timesheet: TimesheetCreate, user: dict = Depends(authentica
     if cursor.fetchone():
         raise HTTPException(status_code=400, detail="Timesheet ID already exists")
     cursor.execute("""
-        INSERT INTO timesheets (timesheet_id, employee_id, project_id, work_date, hours_worked,
+        INSERT INTO timesheets (timesheet_id, employee_id, project_id, date, hours_worked,
             task_description, billable, approved, submitted_date, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (timesheet.timesheet_id, timesheet.employee_id, timesheet.project_id, timesheet.work_date,
+    """, (timesheet.timesheet_id, timesheet.employee_id, timesheet.project_id, timesheet.date,
           timesheet.hours_worked, timesheet.task_description, timesheet.billable,
           timesheet.approved, datetime.now().isoformat(), timesheet.notes))
     db.commit()
@@ -601,8 +601,8 @@ def get_summary_stats(user: dict = Depends(authenticate_with_token), db=Depends(
     cursor = db.cursor()
     if accessible_projects is None:
         cursor.execute("""
-            SELECT COUNT(*) as total_projects, SUM(budget_eur) as total_budget,
-                   SUM(actual_cost_eur) as total_actual_cost, AVG(completion_percentage) as avg_completion
+            SELECT COUNT(*) as total_projects, SUM(budget) as total_budget,
+                   SUM(actual_cost) as total_actual_cost, AVG(completion_percentage) as avg_completion
             FROM projects
         """)
     elif not accessible_projects:
@@ -610,8 +610,8 @@ def get_summary_stats(user: dict = Depends(authenticate_with_token), db=Depends(
     else:
         placeholders = ','.join(['?' for _ in accessible_projects])
         cursor.execute(f"""
-            SELECT COUNT(*) as total_projects, SUM(budget_eur) as total_budget,
-                   SUM(actual_cost_eur) as total_actual_cost, AVG(completion_percentage) as avg_completion
+            SELECT COUNT(*) as total_projects, SUM(budget) as total_budget,
+                   SUM(actual_cost) as total_actual_cost, AVG(completion_percentage) as avg_completion
             FROM projects WHERE project_id IN ({placeholders})
         """, accessible_projects)
     return dict(cursor.fetchone())

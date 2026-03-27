@@ -59,6 +59,7 @@ const Tasks = () => {
       fetchEmployees();
       fetchProjects();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, user]);
 
   const fetchTasks = async () => {
@@ -262,6 +263,7 @@ const Tasks = () => {
     return employee ? `${employee.first_name} ${employee.last_name}` : employeeId;
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getProjectName = (projectId) => {
     const project = projects.find(proj => proj.project_id === projectId);
     return project ? project.project_name : projectId;

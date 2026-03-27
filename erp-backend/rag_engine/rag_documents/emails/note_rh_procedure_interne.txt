@@ -1,0 +1,33 @@
+
+NOTE DE SERVICE RH — PROCÉDURES INTERNES
+Construction Tunisie — Département RH
+======================================
+Réf: RH-2026-003 | Date: 15 janvier 2026
+De: Fatma Gharbi (DRH) | À: Tous les employés
+
+RAPPEL DES PROCÉDURES RH IMPORTANTES
+
+1. DEMANDE DE CONGÉ
+- Toute demande doit être soumise via l'ERP (module Congés)
+- Délai minimum: 15 jours pour congé ≥ 5 jours, 3 jours pour congé < 5 jours
+- Un employé NE PEUT PAS partir en congé s'il a des tâches critiques non assignées
+- En cas d'urgence: contacter directement le DRH
+
+2. ÉVALUATION DE PERFORMANCE
+- Évaluation annuelle: décembre de chaque année
+- Évaluation mi-parcours: juin de chaque année
+- Les KPIs projets sont pris en compte dans l'évaluation des chefs de projet
+- Toute mauvaise performance (3 mois consécutifs) déclenche un plan d'amélioration
+
+3. ACCÈS AU SYSTÈME ERP
+- Chaque employé accède uniquement à ses propres données
+- Les managers voient les données de leur équipe directe
+- Le CEO et RH ont accès global (dans les limites de leurs rôles)
+- Tout accès non autorisé est tracé et sanctionnable
+
+4. SIGNALEMENT D'INCIDENTS
+- Tout incident sur chantier doit être signalé dans l'ERP sous 24h
+- Accidents graves: appel immédiat HSE + rapport dans les 2h
+- Incidents répétitifs: réunion sécurité obligatoire dans les 48h
+
+Fatma Gharbi — DRH

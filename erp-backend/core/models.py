@@ -28,8 +28,8 @@ class ProjectCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: Optional[str] = "Planning"
-    budget_eur: Optional[float] = None
-    actual_cost_eur: Optional[float] = 0
+    budget: Optional[float] = None
+    actual_cost: Optional[float] = 0
     completion_percentage: Optional[int] = 0
     location: Optional[str] = None
     project_manager_id: Optional[str] = None
@@ -44,8 +44,8 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     status: Optional[str] = None
-    budget_eur: Optional[float] = None
-    actual_cost_eur: Optional[float] = None
+    budget: Optional[float] = None
+    actual_cost: Optional[float] = None
     completion_percentage: Optional[int] = None
     location: Optional[str] = None
     project_manager_id: Optional[str] = None
@@ -61,8 +61,8 @@ class Project(BaseModel):
     start_date: Optional[str]
     end_date: Optional[str]
     status: Optional[str]
-    budget_eur: Optional[float]
-    actual_cost_eur: Optional[float]
+    budget: Optional[float]
+    actual_cost: Optional[float]
     completion_percentage: Optional[int]
     location: Optional[str]
     description: Optional[str]
@@ -81,7 +81,7 @@ class EmployeeCreate(BaseModel):
     department: str
     role: str
     hire_date: Optional[str] = None
-    salary_eur: Optional[float] = None
+    salary: Optional[float] = None
     manager_id: Optional[str] = None
     supervised_employees: Optional[str] = None
     assigned_projects: Optional[str] = None
@@ -98,7 +98,7 @@ class EmployeeUpdate(BaseModel):
     position: Optional[str] = None
     department: Optional[str] = None
     role: Optional[str] = None
-    salary_eur: Optional[float] = None
+    salary: Optional[float] = None
     manager_id: Optional[str] = None
     supervised_employees: Optional[str] = None
     assigned_projects: Optional[str] = None
@@ -156,13 +156,14 @@ class KPI(BaseModel):
     kpi_date: str
     budget_variance_percentage: Optional[float]
     schedule_variance_days: Optional[int]
-    quality_score: Optional[int]
+    quality_score: float
     safety_incidents: Optional[int]
     client_satisfaction_score: Optional[float]
     cost_performance_index: Optional[float]
     schedule_performance_index: Optional[float]
     risk_level: Optional[str]
-    team_productivity_percentage: Optional[int]
+    team_productivity_percentage: float
+
 
 
 # ── Leave Requests ────────────────────────────────────────────────────────────
@@ -371,7 +372,7 @@ class PurchaseOrderCreate(BaseModel):
     order_date: str
     delivery_date: Optional[str] = None
     items_description: str
-    total_amount_eur: float
+    total_amount: float
     status: str = "Pending"
     created_by: str
     notes: Optional[str] = None
@@ -390,7 +391,7 @@ class PurchaseOrder(BaseModel):
     order_date: str
     delivery_date: Optional[str]
     items_description: str
-    total_amount_eur: float
+    total_amount: float
     status: str
     created_by: str
     created_date: str
@@ -549,3 +550,23 @@ class ReportCreate(BaseModel):
     period_end: Optional[str] = None
     filters: Optional[str] = "{}"
     parameters: Optional[str] = "{}"
+
+# ── API Whitelist ─────────────────────────────────────────────────────────────
+class ApiWhitelistCreate(BaseModel):
+    endpoint: str
+    methods: str
+    description: Optional[str] = None
+    is_active: Optional[int] = 1
+
+class ApiWhitelistUpdate(BaseModel):
+    endpoint: Optional[str] = None
+    methods: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[int] = None
+
+class ApiWhitelist(BaseModel):
+    id: int
+    endpoint: str
+    methods: str
+    description: Optional[str]
+    is_active: int
